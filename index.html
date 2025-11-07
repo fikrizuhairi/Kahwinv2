@@ -1,4 +1,3 @@
-/*** Full HTML code updated with 2 seconds delay ***/
 <!doctype html>
 <html lang="ms">
 <head>
@@ -23,9 +22,38 @@
     .intro-text .besar{font-family:'Playfair Display',serif;font-size:40px;font-weight:700;letter-spacing:1px;line-height:1.2}
     .intro-text .besar span{display:block}
     .intro-text .tarikh{font-family:'Poppins',sans-serif;font-size:16px;color:#222;margin-top:10px;font-weight:500;text-shadow:none}
-    .intro-text .lokasi{font-family:'Poppins',sans-serif;font-size:14px;color:#222;margin-top:3px;font-weight:500;text-shadow:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .intro-text .lokasi{font-family:'Poppins',sans-serif;font-size:14px;color:#222;margin-top:3px;font-weight:500;text-shadow:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
     .content{background:rgba(255,255,255,0.8);backdrop-filter:blur(6px);border-radius:16px;padding:24px;box-shadow:0 8px 20px rgba(0,0,0,0.05);position:relative;z-index:3;margin:20px;max-width:420px}
+
+    .parent-name,.couple-name{font-family:'Playfair Display',serif;font-size:18px;color:#2b2b2b;margin-bottom:8px;text-align:center}
+
+    h2{font-size:18px;font-weight:600;color:var(--accent);margin:16px 0 8px;text-align:center}
+    p{font-size:15px;color:#222;line-height:1.6;margin-bottom:8px;text-align:center}
+
+    .btn{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#fff;padding:12px 20px;border-radius:12px;font-weight:600;text-decoration:none;margin:6px auto;text-align:center;border:none;transition:0.2s;width:100%;max-width:300px}
+    .btn i{font-size:18px}
+    .btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+    .btn:hover{opacity:0.9}
+
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+    .grid img{width:100%;height:90px;object-fit:cover;border-radius:8px}
+
+    form.rsvp{display:none;flex-direction:column;gap:8px;margin-top:10px}
+    form.rsvp.active{display:flex}
+    .rsvp input[type="text"],.rsvp input[type="number"],.rsvp select{padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px}
+    .rsvp .row{display:flex;gap:8px}
+    .rsvp .row .col{flex:1}
+
+    .countdown{display:flex;justify-content:center;gap:8px;margin-top:12px}
+    .countdown div{background:#f1f1f1;padding:8px 10px;border-radius:8px;min-width:54px}
+    .countdown .num{font-weight:700;font-size:16px}
+    .countdown .lbl{font-size:11px;color:var(--muted)}
+
+    .note{font-size:13px;color:#555;margin-top:6px;text-align:center}
+    .success{background:#e6ffef;border:1px solid #b7f0ce;padding:10px;border-radius:8px;color:#005b2e;margin-top:10px;text-align:center}
+
+    footer{font-size:12px;color:var(--muted);margin-top:20px;text-align:center}
   </style>
 </head>
 <body>
@@ -53,36 +81,91 @@
         <div class="couple-name">SITI ISMAHANI IZZATI BINTI MOHD SHUHAIMI</div>
         <div class="parent-name">&amp;</div>
         <div class="couple-name">MUHAMMAD FIKRI BIN ZUHAIRI</div>
+
+        <h2>Butiran Majlis</h2>
+        <p><strong>Tarikh:</strong> Sabtu, 03 Januari 2026<br><strong>Masa:</strong> 11:00 pagi - 4:00 petang<br><strong>Tempat:</strong> White House Event Space Dungun</p>
+
+        <h2>Atur Cara | Itinerary</h2>
+        <p><strong>Jamuan:</strong> 11.00 AM – 4.00 PM<br><strong>Ketibaan Pengantin:</strong> 12.00 PM</p>
+
+        <h2>Galeri</h2>
+        <div class="grid">
+          <img src="https://i.postimg.cc/3RRKKKHH/265f0c1f-9af7-4fb7-956d-50d064a0eba4.jpg" alt="1">
+          <img src="https://i.postimg.cc/KcP9ZtJy/A24C2718-C6BC-4653-B516-9741E7B213BF-1-105-c.jpg" alt="2">
+          <img src="https://i.postimg.cc/T1VPHTMh/8EC8700E-DA47-4FF0-9F84-2FCE47B1A986-1-105-c.jpg" alt="3">
+        </div>
+
+        <!-- RSVP button + form -->
+        <div style="display:flex;justify-content:center;margin-top:16px;width:100%">
+          <button id="openRsvp" class="btn" style="max-width:300px;width:100%"><i class="fa-solid fa-clipboard-list"></i> RSVP</button>
+        </div>
+
+        <form class="rsvp" id="rsvpForm">
+          <input type="text" id="name" name="name" placeholder="Nama" required />
+          <div class="row">
+            <div class="col"><input type="number" id="guests" name="guests" placeholder="Bil. Ahli (termasuk anda)" min="1" value="1" required /></div>
+            <div class="col">
+              <select id="attend" name="attend" required>
+                <option value="">Hadir atau Tidak</option>
+                <option value="Hadir">Hadir</option>
+                <option value="Tidak Hadir">Tidak Hadir</option>
+              </select>
+            </div>
+          </div>
+          <textarea id="note" name="note" placeholder="Nota (pilihan)" rows="2" style="padding:10px;border-radius:8px;border:1px solid #ddd"></textarea>
+          <div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
+            <button type="submit" class="btn" style="max-width:300px;width:100%"><i class="fa-solid fa-paper-plane"></i> Hantar</button>
+          </div>
+          <div id="rsvpMsg" class="note" aria-live="polite"></div>
+        </form>
+
+        <h2>Lokasi</h2>
+        <p>White House Event Space, Dungun</p>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
+          <a href="https://maps.app.goo.gl/Z2F3c86dVen1ciR29" class="btn" style="flex:1;max-width:200px"><i class="fa-solid fa-map-location-dot"></i> Google Maps</a>
+          <a href="https://ul.waze.com/ul?venue_id=67764271.677839321.39155974&overview=yes&utm_campaign=default&utm_source=waze_website&utm_medium=lm_share_location" class="btn ghost" style="flex:1;max-width:200px"><i class="fa-brands fa-waze"></i> Waze</a>
+        </div>
+
+        <h2>COUNTING DAYS</h2>
+        <div class="countdown" id="countdown">
+          <div><div class="num" id="days">0</div><div class="lbl">Hari</div></div>
+          <div><div class="num" id="hours">0</div><div class="lbl">Jam</div></div>
+          <div><div class="num" id="mins">0</div><div class="lbl">Minit</div></div>
+          <div><div class="num" id="secs">0</div><div class="lbl">Saat</div></div>
+        </div>
+
+        <footer>Terima kasih — Kami hargai kehadiran dan doa anda.</footer>
       </div>
     </section>
   </div>
 
   <script>
-    (function(){
-      const sections = document.querySelectorAll('section');
-      if(!sections || sections.length < 2) return;
+    // Countdown to event (03 Jan 2026 11:00 MYT)
+    function pad(n){return String(n).padStart(2,'0');}
+    const eventDate = new Date('2026-01-03T11:00:00+08:00');
+    function updateCountdown(){
+      const now = new Date();
+      let diff = Math.max(0, Math.floor((eventDate - now) / 1000));
+      const days = Math.floor(diff / 86400); diff %= 86400;
+      const hours = Math.floor(diff / 3600); diff %= 3600;
+      const mins = Math.floor(diff / 60); const secs = diff % 60;
+      document.getElementById('days').textContent = days;
+      document.getElementById('hours').textContent = pad(hours);
+      document.getElementById('mins').textContent = pad(mins);
+      document.getElementById('secs').textContent = pad(secs);
+    }
+    updateCountdown(); setInterval(updateCountdown, 1000);
 
-      let userInteracted = false;
-      const cancelAuto = () => {
-        userInteracted = true;
-        if(autoTimeout) clearTimeout(autoTimeout);
-      };
+    // RSVP toggle
+    const openBtn = document.getElementById('openRsvp');
+    const form = document.getElementById('rsvpForm');
 
-      ['wheel','touchstart','keydown','mousedown'].forEach(ev => window.addEventListener(ev, cancelAuto, {passive:true}));
-
-      let lastScroll = window.scrollY;
-      const onScroll = () => {
-        if(Math.abs(window.scrollY - lastScroll) > 5) cancelAuto();
-        lastScroll = window.scrollY;
-      };
-      window.addEventListener('scroll', onScroll, {passive:true});
-
-      const autoTimeout = setTimeout(()=>{
-        if(userInteracted) return;
-        sections[1].scrollIntoView({behavior:'smooth'});
-      }, 2000); // Auto-scroll after 2 seconds
-
-    })();
+    openBtn.addEventListener('click', ()=>{
+      form.classList.toggle('active');
+      if(form.classList.contains('active')){
+        form.scrollIntoView({behavior:'smooth', block:'center'});
+      }
+    });
   </script>
 </body>
 </html>
