@@ -175,6 +175,23 @@
       }
     });
 
+    // Submit RSVP to Google Sheet
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwV7R1W5UntrVYVhB8eX8QfV3eCG0G2Lk5mRvb9evw3BzWyD_tnN3XWld5b4znqYwLYzg/exec';
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const data = new FormData(form);
+      fetch(scriptURL, { method: 'POST', body: data })
+        .then(response => {
+          document.getElementById('rsvpMsg').textContent = 'Terima kasih! RSVP anda telah diterima.';
+          form.reset();
+        })
+        .catch(error => {
+          document.getElementById('rsvpMsg').textContent = 'Ralat menghantar RSVP. Sila cuba lagi.';
+          console.error('Error!', error.message);
+        });
+    });
+
     // Image Modal
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImg');
