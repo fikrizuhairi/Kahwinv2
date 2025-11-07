@@ -1,3 +1,4 @@
+/*** Full HTML code updated with 2 seconds delay ***/
 <!doctype html>
 <html lang="ms">
 <head>
@@ -25,31 +26,6 @@
     .intro-text .lokasi{font-family:'Poppins',sans-serif;font-size:14px;color:#222;margin-top:3px;font-weight:500;text-shadow:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
     .content{background:rgba(255,255,255,0.8);backdrop-filter:blur(6px);border-radius:16px;padding:24px;box-shadow:0 8px 20px rgba(0,0,0,0.05);position:relative;z-index:3;margin:20px;max-width:420px}
-
-    .parent-name,.couple-name{font-family:'Playfair Display',serif;font-size:18px;color:#2b2b2b;margin-bottom:8px;text-align:center}
-
-    h2{font-size:18px;font-weight:600;color:var(--accent);margin:16px 0 8px;text-align:center}
-    p{font-size:15px;color:#222;line-height:1.6;margin-bottom:8px;text-align:center}
-
-    .btn{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#fff;padding:12px 20px;border-radius:12px;font-weight:600;text-decoration:none;margin:6px;text-align:center;border:none;transition:0.2s}
-    .btn i{font-size:18px}
-    .btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
-    .btn:hover{opacity:0.9}
-
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
-    .grid img{width:100%;height:90px;object-fit:cover;border-radius:8px}
-
-    .countdown{display:flex;justify-content:center;gap:8px;margin-top:12px}
-    .countdown div{background:#f1f1f1;padding:8px 10px;border-radius:8px;min-width:54px}
-    .countdown .num{font-weight:700;font-size:16px}
-    .countdown .lbl{font-size:11px;color:var(--muted)}
-
-    footer{font-size:12px;color:var(--muted);margin-top:20px;text-align:center}
-
-    #detailsPanel{display:none;margin-top:12px;text-align:left}
-    #detailsPanel.open{display:block}
-
-    .slide{transition:all .28s ease}
   </style>
 </head>
 <body>
@@ -73,73 +49,16 @@
         <div class="parent-name">HJ. MOHD SHUHAIMI BIN DAUD</div>
         <div class="parent-name">&amp;</div>
         <div class="parent-name">HJH. NOR AZILA BINTI RAMLI</div>
-
         <p>Dengan penuh kesyukuran kami menjemput,<br>Dato’ | Datin | Tuan | Puan | Encik | Cik<br>ke majlis perkahwinan puteri kami</p>
-
         <div class="couple-name">SITI ISMAHANI IZZATI BINTI MOHD SHUHAIMI</div>
         <div class="parent-name">&amp;</div>
         <div class="couple-name">MUHAMMAD FIKRI BIN ZUHAIRI</div>
-
-        <div style="display:flex;justify-content:center;gap:8px">
-          <button id="toggleDetails" class="btn">Butiran</button>
-          <button class="btn ghost" id="openRsvp">RSVP</button>
-        </div>
-
-        <div id="detailsPanel" class="slide" aria-hidden="true">
-          <h2>Butiran Majlis</h2>
-          <p><strong>Tarikh:</strong> Sabtu, 03 Januari 2026<br><strong>Masa:</strong> 11:00 pagi - 4:00 petang<br><strong>Tempat:</strong> White House Event Space Dungun</p>
-
-          <h2>Atur Cara | Itinerary</h2>
-          <p><strong>Jamuan:</strong> 11.00 AM – 4.00 PM<br><strong>Ketibaan Pengantin:</strong> 12.00 PM</p>
-
-          <h2>Galeri</h2>
-          <div class="grid">
-            <img src="https://i.postimg.cc/3RRKKKHH/265f0c1f-9af7-4fb7-956d-50d064a0eba4.jpg" alt="1">
-            <img src="https://i.postimg.cc/KcP9ZtJy/A24C2718-C6BC-4653-B516-9741E7B213BF-1-105-c.jpg" alt="2">
-            <img src="https://i.postimg.cc/T1VPHTMh/8EC8700E-DA47-4FF0-9F84-2FCE47B1A986-1-105-c.jpg" alt="3">
-          </div>
-        </div>
-
-        <h2>Lokasi</h2>
-        <p>White House Event Space, Dungun</p>
-        <div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
-          <a href="https://maps.app.goo.gl/Z2F3c86dVen1ciR29" class="btn" style="flex:1;max-width:200px"><i class="fa-solid fa-map-location-dot"></i> Google Maps</a>
-          <a href="https://waze.com/ul?ll=4.7576,103.4039&navigate=yes" class="btn ghost" style="flex:1;max-width:200px"><i class="fa-brands fa-waze"></i> Waze</a>
-        </div>
-
-        <h2>Hashtag Rasmi</h2>
-        <h1 style="font-size:20px">#IsmaFikri2026</h1>
-        <a href="#" class="btn" id="addCal">Tambah ke Kalendar</a>
-
-        <h2>COUNTING DAYS</h2>
-        <div class="countdown" id="countdown">
-          <div><div class="num" id="days">0</div><div class="lbl">Hari</div></div>
-          <div><div class="num" id="hours">0</div><div class="lbl">Jam</div></div>
-          <div><div class="num" id="mins">0</div><div class="lbl">Minit</div></div>
-          <div><div class="num" id="secs">0</div><div class="lbl">Saat</div></div>
-        </div>
-
-        <footer>Terima kasih — Kami hargai kehadiran dan doa anda.</footer>
       </div>
     </section>
   </div>
 
   <script>
-    function pad(n){return String(n).padStart(2,'0')}
-    const eventDate=new Date('2026-01-03T11:00:00+08:00');
-    function tick(){const now=new Date();let diff=Math.max(0,Math.floor((eventDate-now)/1000));const d=Math.floor(diff/86400);diff%=86400;const h=Math.floor(diff/3600);diff%=3600;const m=Math.floor(diff/60);const s=diff%60;document.getElementById('days').textContent=d;document.getElementById('hours').textContent=pad(h);document.getElementById('mins').textContent=pad(m);document.getElementById('secs').textContent=pad(s);}tick();setInterval(tick,1000);
-
-    const toggle=document.getElementById('toggleDetails');
-    const details=document.getElementById('detailsPanel');
-    toggle.addEventListener('click',()=>{
-      const isOpen = details.classList.toggle('open');
-      details.setAttribute('aria-hidden', !isOpen);
-      if(isOpen) details.scrollIntoView({behavior:'smooth',block:'center'});
-    });
-
-    // --- Auto-scroll on page open, but cancel if user interacts ---
     (function(){
-      const app = document.getElementById('appContainer') || document.querySelector('.app');
       const sections = document.querySelectorAll('section');
       if(!sections || sections.length < 2) return;
 
@@ -149,10 +68,8 @@
         if(autoTimeout) clearTimeout(autoTimeout);
       };
 
-      // If user scrolls/touches/wheels/keys before auto-scroll happens -> cancel it
       ['wheel','touchstart','keydown','mousedown'].forEach(ev => window.addEventListener(ev, cancelAuto, {passive:true}));
 
-      // Also cancel if user manually scrolls the document
       let lastScroll = window.scrollY;
       const onScroll = () => {
         if(Math.abs(window.scrollY - lastScroll) > 5) cancelAuto();
@@ -160,14 +77,11 @@
       };
       window.addEventListener('scroll', onScroll, {passive:true});
 
-      // Start auto-scroll after small delay (so page paints)
       const autoTimeout = setTimeout(()=>{
         if(userInteracted) return;
-        // Smoothly scroll to the second section
         sections[1].scrollIntoView({behavior:'smooth'});
-      }, 650);
+      }, 2000); // Auto-scroll after 2 seconds
 
-      // If user interacts during the smooth scroll, we cancel further auto actions (listeners remain harmless)
     })();
   </script>
 </body>
