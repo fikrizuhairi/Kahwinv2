@@ -37,21 +37,18 @@
     .btn:hover{opacity:0.9}
 
     .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
-    .grid img{width:100%;height:90px;object-fit:cover;border-radius:8px}
+    .grid img{width:100%;height:90px;object-fit:cover;border-radius:8px;cursor:pointer;transition:0.3s}
+    .grid img:hover{opacity:0.9;transform:scale(1.03)}
 
-    form.rsvp{display:none;flex-direction:column;gap:8px;margin-top:10px}
-    form.rsvp.active{display:flex}
-    .rsvp input[type="text"],.rsvp input[type="number"],.rsvp select{padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px}
-    .rsvp .row{display:flex;gap:8px}
-    .rsvp .row .col{flex:1}
+    /* Modal styles */
+    .modal{display:none;position:fixed;z-index:999;left:0;top:0;width:100%;height:100%;overflow:auto;background-color:rgba(0,0,0,0.8)}
+    .modal-content{margin:auto;display:block;max-width:90%;max-height:90%;border-radius:10px}
+    .close{position:absolute;top:15px;right:25px;color:white;font-size:30px;font-weight:bold;cursor:pointer}
 
     .countdown{display:flex;justify-content:center;gap:8px;margin-top:12px}
     .countdown div{background:#f1f1f1;padding:8px 10px;border-radius:8px;min-width:54px}
     .countdown .num{font-weight:700;font-size:16px}
     .countdown .lbl{font-size:11px;color:var(--muted)}
-
-    .note{font-size:13px;color:#555;margin-top:6px;text-align:center}
-    .success{background:#e6ffef;border:1px solid #b7f0ce;padding:10px;border-radius:8px;color:#005b2e;margin-top:10px;text-align:center}
 
     footer{font-size:12px;color:var(--muted);margin-top:20px;text-align:center}
   </style>
@@ -64,8 +61,8 @@
       </div>
 
       <div class="intro-text">
-        <div class="kecil">WALIMATULURUS</div><br>
-        <div class="besar"><span>ISMA</span><span>&amp;</span><span>FIKRI</span></div><br><br>
+        <div class="kecil">WALIMATULURUS</div>
+        <div class="besar"><span>ISMA</span><span>&amp;</span><span>FIKRI</span></div>
         <div class="tarikh">03 JANUARI 2026 | SABTU</div>
         <div class="lokasi">WHITE HOUSE EVENT SPACE, DUNGUN</div>
       </div>
@@ -77,7 +74,7 @@
         <div class="parent-name">HJ. MOHD SHUHAIMI BIN DAUD</div>
         <div class="parent-name">&amp;</div>
         <div class="parent-name">HJH. NOR AZILA BINTI RAMLI</div>
-        <p>Dengan penuh kesyukuran kami menjemput,<br>Dato’ | Datin | Tuan | Puan | Encik | Cik<br>ke majlis perkahwinan puteri kami</p><br>
+        <p>Dengan penuh kesyukuran kami menjemput,<br>Dato’ | Datin | Tuan | Puan | Encik | Cik<br>ke majlis perkahwinan puteri kami</p>
         <div class="couple-name">SITI ISMAHANI IZZATI BINTI MOHD SHUHAIMI</div>
         <div class="parent-name">&amp;</div>
         <div class="couple-name">MUHAMMAD FIKRI BIN ZUHAIRI</div>
@@ -95,29 +92,11 @@
           <img src="https://i.postimg.cc/T1VPHTMh/8EC8700E-DA47-4FF0-9F84-2FCE47B1A986-1-105-c.jpg" alt="3">
         </div>
 
-        <!-- RSVP button + form -->
-        <div style="display:flex;justify-content:center;margin-top:16px;width:100%">
-          <button id="openRsvp" class="btn" style="max-width:300px;width:100%"><i class="fa-solid fa-clipboard-list"></i> RSVP</button>
+        <!-- Modal for enlarged image -->
+        <div id="imageModal" class="modal">
+          <span class="close">&times;</span>
+          <img class="modal-content" id="modalImg" />
         </div>
-
-        <form class="rsvp" id="rsvpForm">
-          <input type="text" id="name" name="name" placeholder="Nama" required />
-          <div class="row">
-            <div class="col"><input type="number" id="guests" name="guests" placeholder="Bil. Ahli (termasuk anda)" min="1" value="1" required /></div>
-            <div class="col">
-              <select id="attend" name="attend" required>
-                <option value="">Hadir atau Tidak</option>
-                <option value="Hadir">Hadir</option>
-                <option value="Tidak Hadir">Tidak Hadir</option>
-              </select>
-            </div>
-          </div>
-          <textarea id="note" name="note" placeholder="Nota (pilihan)" rows="2" style="padding:10px;border-radius:8px;border:1px solid #ddd"></textarea>
-          <div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
-            <button type="submit" class="btn" style="max-width:300px;width:100%"><i class="fa-solid fa-paper-plane"></i> Hantar</button>
-          </div>
-          <div id="rsvpMsg" class="note" aria-live="polite"></div>
-        </form>
 
         <h2>Lokasi</h2>
         <p>White House Event Space, Dungun</p>
@@ -156,16 +135,28 @@
     }
     updateCountdown(); setInterval(updateCountdown, 1000);
 
-    // RSVP toggle
-    const openBtn = document.getElementById('openRsvp');
-    const form = document.getElementById('rsvpForm');
+    // Image Modal
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImg');
+    const closeBtn = document.getElementsByClassName('close')[0];
+    const images = document.querySelectorAll('.grid img');
 
-    openBtn.addEventListener('click', ()=>{
-      form.classList.toggle('active');
-      if(form.classList.contains('active')){
-        form.scrollIntoView({behavior:'smooth', block:'center'});
-      }
+    images.forEach(img => {
+      img.addEventListener('click', () => {
+        modal.style.display = 'block';
+        modalImg.src = img.src;
+      });
     });
+
+    closeBtn.onclick = function() {
+      modal.style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = 'none';
+      }
+    }
   </script>
 </body>
 </html>
