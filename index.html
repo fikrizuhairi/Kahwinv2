@@ -136,6 +136,39 @@
       details.setAttribute('aria-hidden', !isOpen);
       if(isOpen) details.scrollIntoView({behavior:'smooth',block:'center'});
     });
+
+    // --- Auto-scroll on page open, but cancel if user interacts ---
+    (function(){
+      const app = document.getElementById('appContainer') || document.querySelector('.app');
+      const sections = document.querySelectorAll('section');
+      if(!sections || sections.length < 2) return;
+
+      let userInteracted = false;
+      const cancelAuto = () => {
+        userInteracted = true;
+        if(autoTimeout) clearTimeout(autoTimeout);
+      };
+
+      // If user scrolls/touches/wheels/keys before auto-scroll happens -> cancel it
+      ['wheel','touchstart','keydown','mousedown'].forEach(ev => window.addEventListener(ev, cancelAuto, {passive:true}));
+
+      // Also cancel if user manually scrolls the document
+      let lastScroll = window.scrollY;
+      const onScroll = () => {
+        if(Math.abs(window.scrollY - lastScroll) > 5) cancelAuto();
+        lastScroll = window.scrollY;
+      };
+      window.addEventListener('scroll', onScroll, {passive:true});
+
+      // Start auto-scroll after small delay (so page paints)
+      const autoTimeout = setTimeout(()=>{
+        if(userInteracted) return;
+        // Smoothly scroll to the second section
+        sections[1].scrollIntoView({behavior:'smooth'});
+      }, 650);
+
+      // If user interacts during the smooth scroll, we cancel further auto actions (listeners remain harmless)
+    })();
   </script>
 </body>
 </html>
