@@ -234,101 +234,118 @@
 </div>
 
   <script>
-    function pad(n){return String(n).padStart(2,'0');}
-    const eventDate = new Date('2026-01-01T11:00:00+08:00');
-    function updateCountdown(){
-      const now = new Date();
-      let diff = Math.max(0, Math.floor((eventDate - now) / 1000));
-      const days = Math.floor(diff / 86400); diff %= 86400;
-      const hours = Math.floor(diff / 3600); diff %= 3600;
-      const mins = Math.floor(diff / 60); const secs = diff % 60;
-      const daysEl = document.getElementById('days');
-      const hoursEl = document.getElementById('hours');
-      const minsEl = document.getElementById('mins');
-      const secsEl = document.getElementById('secs');
-      if(daysEl) daysEl.textContent = days;
-      if(hoursEl) hoursEl.textContent = pad(hours);
-      if(minsEl) minsEl.textContent = pad(mins);
-      if(secsEl) secsEl.textContent = pad(secs);
-    }
-    updateCountdown(); setInterval(updateCountdown, 1000);
-
-    const openBtn = document.getElementById('openRsvp');
-    const bottomRsvpBtn = document.getElementById('bottomRsvpBtn');
-    const form = document.getElementById('rsvpForm');
-
-    function toggleRsvp(){
-      if(!form) return;
-      form.classList.toggle('active');
-      const isActive = form.classList.contains('active');
-      if(isActive){
-        const mainCard = document.getElementById('mainCard');
-        if(mainCard) mainCard.scrollIntoView({behavior:'smooth', block:'center'});
-      }
-    }
-    if(openBtn) openBtn.addEventListener('click', toggleRsvp);
-    if(bottomRsvpBtn) bottomRsvpBtn.addEventListener('click', toggleRsvp);
-
-    const modal = document.getElementById('imageModal');
-    const modalImg = document.getElementById('modalImg');
-    const closeBtn = document.getElementsByClassName('close')[0];
-    const images = document.querySelectorAll('.grid img');
-
-    if(images){
-      images.forEach(img => {
-        img.addEventListener('click', () => {
-          if(modal && modalImg){ modal.style.display = 'block'; modalImg.src = img.src; }
-        });
-      });
-    }
-
-    if(closeBtn) closeBtn.onclick = function() { if(modal) modal.style.display = 'none'; }
-    window.addEventListener('click', function(event) { if (modal && event.target == modal) modal.style.display = 'none'; });
-
-    // Call & Map popup logic
-    (function(){
-var callBtn = document.getElementById('callBtn');
-var mapBtn = document.getElementById('mapBtn');
-var bottomRsvpBtn = document.getElementById('bottomRsvpBtn');
-var contactCard = document.getElementById('contactCard');
-var mapPopup = document.getElementById('mapPopup');
-var popupRsvp = document.getElementById('popupRsvp');
-var ucapanForm = document.getElementById('ucapanForm');
-
-
-function hideAll(){ if(contactCard) contactCard.style.display='none'; if(mapPopup) mapPopup.style.display='none'; if(popupRsvp) popupRsvp.style.display='none'; if(ucapanForm) ucapanForm.style.display='none'; var iframePopup = document.getElementById('popupRsvpIframe'); if(iframePopup) iframePopup.style.display = 'none'; }
-
-
-if(callBtn){ callBtn.addEventListener('click', function(e){ e.stopPropagation(); hideAll(); if(contactCard) contactCard.style.display = (contactCard.style.display==='block')? 'none':'block'; }); }
-if(mapBtn){ mapBtn.addEventListener('click', function(e){ e.stopPropagation(); hideAll(); if(mapPopup) mapPopup.style.display = (mapPopup.style.display==='block')? 'none':'block'; }); }
-if(bottomRsvpBtn){ bottomRsvpBtn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); hideAll(); if(popupRsvp) popupRsvp.style.display = (popupRsvp.style.display==='block')? 'none':'block'; }); }
-
-
-var openExternal = document.getElementById('openExternalRsvp');
-var openUcapan = document.getElementById('openUcapan');
-if(openExternal) openExternal.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); var iframePopup = document.getElementById('popupRsvpIframe'); if(iframePopup) iframePopup.style.display = (iframePopup.style.display === 'block') ? 'none' : 'block'; });
-if(openUcapan) openUcapan.addEventListener('click', function(){ if(popupRsvp) popupRsvp.style.display='none'; if(ucapanForm) ucapanForm.style.display='block'; document.getElementById('ucap_name').focus(); });
-
-
-var submitBtn = document.getElementById('submitUcapan');
-if(submitBtn){ submitBtn.addEventListener('click', function(){ var name = document.getElementById('ucap_name').value.trim(); var text = document.getElementById('ucap_text').value.trim(); if(!name||!text){ alert('Sila isi nama dan ucapan.'); return; } var container = document.getElementById('bubblesContainer'); var bubble = document.createElement('div'); bubble.className='bubble'; bubble.innerHTML = '<div class="meta">'+escapeHtml(name)+'</div><div class="msg">'+escapeHtml(text)+'</div>'; if(container) container.insertBefore(bubble, container.firstChild); document.getElementById('ucap_name').value=''; document.getElementById('ucap_text').value=''; if(ucapanForm) ucapanForm.style.display='none'; }); }
-
-
-document.addEventListener('click', function(e){ var iframePopup = document.getElementById('popupRsvpIframe'); var popupEls = [contactCard, mapPopup, popupRsvp, ucapanForm, iframePopup]; var btns = [callBtn, mapBtn, bottomRsvpBtn]; var clicked=false; popupEls.forEach(function(p){ if(p && p.contains && p.contains(e.target)) clicked=true; }); btns.forEach(function(b){ if(b && (b===e.target || b.contains(e.target))) clicked=true; }); if(!clicked) hideAll(); });
-
-
-function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\'/g,'&#039;'); }
-})();
-
-// attach close button handler for RSVP iframe popup
+// Main script: countdown, modals, popups, ucapan storage
 (function(){
-  var closeBtn = document.getElementById('closeRsvpIframe');
-  if(!closeBtn) return;
-  closeBtn.addEventListener('click', function(e){
-    e.stopPropagation();
-    var iframePopup = document.getElementById('popupRsvpIframe');
-    if(iframePopup) iframePopup.style.display = 'none';
-  });
+  function pad(n){return String(n).padStart(2,'0');}
+  const eventDate = new Date('2026-01-01T11:00:00+08:00');
+  function updateCountdown(){
+    const now = new Date();
+    let diff = Math.max(0, Math.floor((eventDate - now) / 1000));
+    const days = Math.floor(diff / 86400); diff %= 86400;
+    const hours = Math.floor(diff / 3600); diff %= 3600;
+    const mins = Math.floor(diff / 60); const secs = diff % 60;
+    const daysEl = document.getElementById('days');
+    const hoursEl = document.getElementById('hours');
+    const minsEl = document.getElementById('mins');
+    const secsEl = document.getElementById('secs');
+    if(daysEl) daysEl.textContent = days;
+    if(hoursEl) hoursEl.textContent = pad(hours);
+    if(minsEl) minsEl.textContent = pad(mins);
+    if(secsEl) secsEl.textContent = pad(secs);
+  }
+  updateCountdown(); setInterval(updateCountdown, 1000);
+
+  // Image modal
+  const modal = document.getElementById('imageModal');
+  const modalImg = document.getElementById('modalImg');
+  const closeBtn = document.getElementsByClassName('close')[0];
+  const images = document.querySelectorAll('.grid img');
+  if(images){ images.forEach(img => { img.addEventListener('click', () => { if(modal && modalImg){ modal.style.display = 'block'; modalImg.src = img.src; } }); }); }
+  if(closeBtn) closeBtn.onclick = function() { if(modal) modal.style.display = 'none'; }
+  window.addEventListener('click', function(event) { if (modal && event.target == modal) modal.style.display = 'none'; });
+
+  // Popup helpers
+  var callBtn = document.getElementById('callBtn');
+  var mapBtn = document.getElementById('mapBtn');
+  var bottomRsvpBtn = document.getElementById('bottomRsvpBtn');
+  var contactCard = document.getElementById('contactCard');
+  var mapPopup = document.getElementById('mapPopup');
+  var popupRsvp = document.getElementById('popupRsvp');
+  var ucapanForm = document.getElementById('ucapanForm');
+
+  function hideAll(){
+    if(contactCard) contactCard.style.display='none';
+    if(mapPopup) mapPopup.style.display='none';
+    if(popupRsvp) popupRsvp.style.display='none';
+    if(ucapanForm) ucapanForm.style.display='none';
+    var iframePopup = document.getElementById('popupRsvpIframe'); if(iframePopup) iframePopup.style.display = 'none';
+  }
+
+  if(callBtn){ callBtn.addEventListener('click', function(e){ e.stopPropagation(); hideAll(); if(contactCard) contactCard.style.display = (contactCard.style.display==='block')? 'none':'block'; }); }
+  if(mapBtn){ mapBtn.addEventListener('click', function(e){ e.stopPropagation(); hideAll(); if(mapPopup) mapPopup.style.display = (mapPopup.style.display==='block')? 'none':'block'; }); }
+  if(bottomRsvpBtn){ bottomRsvpBtn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); hideAll(); if(popupRsvp) popupRsvp.style.display = (popupRsvp.style.display==='block')? 'none':'block'; }); }
+
+  var openExternal = document.getElementById('openExternalRsvp');
+  var openUcapan = document.getElementById('openUcapan');
+  if(openExternal) openExternal.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); var iframePopup = document.getElementById('popupRsvpIframe'); if(iframePopup) iframePopup.style.display = (iframePopup.style.display === 'block') ? 'none' : 'block'; });
+  if(openUcapan) openUcapan.addEventListener('click', function(){ if(popupRsvp) popupRsvp.style.display='none'; if(ucapanForm) ucapanForm.style.display='block'; var nameField = document.getElementById('ucap_name'); if(nameField) nameField.focus(); });
+
+  // Escape helper
+  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\'/g,'&#039;'); }
+
+  // --- Ucapan storage: localStorage key and helpers ---
+  var STORAGE_KEY = 'ucapan_bubbles_v1';
+  function loadUcapanFromStorage(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return [];
+      var arr = JSON.parse(raw);
+      if(!Array.isArray(arr)) return [];
+      return arr;
+    }catch(e){ console.error('loadUcapan error', e); return []; }
+  }
+  function saveUcapanArray(arr){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }catch(e){ console.error('saveUcapan error', e); }
+  }
+  function addUcapanToStorage(name,text){
+    var arr = loadUcapanFromStorage();
+    arr.push({name:name, text:text, ts:Date.now()});
+    saveUcapanArray(arr);
+  }
+
+  function renderUcapanBubble(item){
+    var container = document.getElementById('bubblesContainer');
+    if(!container) return;
+    var bubble = document.createElement('div'); bubble.className='bubble';
+    var meta = document.createElement('div'); meta.className='meta'; meta.textContent = item.name;
+    var msg = document.createElement('div'); msg.className='msg'; msg.textContent = item.text;
+    bubble.appendChild(meta); bubble.appendChild(msg);
+    container.insertBefore(bubble, container.firstChild);
+  }
+
+  // On load, render stored ucapan
+  (function(){
+    var stored = loadUcapanFromStorage();
+    stored.forEach(function(item){ if(item && item.name && item.text) renderUcapanBubble(item); });
+  })();
+
+  // Submit handler for ucapan
+  var submitBtn = document.getElementById('submitUcapan');
+  if(submitBtn){ submitBtn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); var nameEl = document.getElementById('ucap_name'); var textEl = document.getElementById('ucap_text'); if(!nameEl || !textEl) return; var name = nameEl.value.trim(); var text = textEl.value.trim(); if(!name||!text){ alert('Sila isi nama dan ucapan.'); return; } // render
+    var item = {name:escapeHtml(name), text:escapeHtml(text)}; renderUcapanBubble(item); // persist
+    try{ addUcapanToStorage(name, text); }catch(e){console.error(e);} // reset
+    nameEl.value=''; textEl.value=''; if(ucapanForm) ucapanForm.style.display='none'; }); }
+
+  // Click-outside to close (including iframe popup)
+  document.addEventListener('click', function(e){ var iframePopup = document.getElementById('popupRsvpIframe'); var popupEls = [contactCard, mapPopup, popupRsvp, ucapanForm, iframePopup]; var btns = [callBtn, mapBtn, bottomRsvpBtn]; var clicked=false; popupEls.forEach(function(p){ if(p && p.contains && p.contains(e.target)) clicked=true; }); btns.forEach(function(b){ if(b && (b===e.target || b.contains(e.target))) clicked=true; }); if(!clicked) hideAll(); });
+
+  // attach close button handler for RSVP iframe popup
+  (function(){
+    var closeBtn = document.getElementById('closeRsvpIframe');
+    if(!closeBtn) return;
+    closeBtn.addEventListener('click', function(e){ e.stopPropagation(); var iframePopup = document.getElementById('popupRsvpIframe'); if(iframePopup) iframePopup.style.display = 'none'; });
+  })();
+
 })();
 </script>
 </body>
