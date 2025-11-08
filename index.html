@@ -86,7 +86,9 @@
     .bubble .meta{font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600}
     .bubble .msg{font-size:14px;color:#222;line-height:1.4}
 
-  </style>
+  .map-popup iframe{width:100%;height:60vh;max-height:760px;border:none;border-radius:10px;margin-top:8px}
+@media (max-width:420px){.map-popup iframe{height:65vh;max-height:820px}}
+</style>
 </head>
 <body>
   <div class="app">
@@ -203,17 +205,22 @@
         <a href="https://ul.waze.com/ul?venue_id=67764271.677839321.39155974" target="_blank" style="display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;text-decoration:none;padding:8px;border-radius:8px;margin:6px auto;max-width:200px;gap:8px"><i class="fa-brands fa-waze"></i><span>Waze</span></a>
       </div>
     </div>
-    <div class="icon-btn" id="bottomRsvpBtn" aria-label="rsvp"><i class="fa-regular fa-envelope"></i><span>RSVP</span></div>
+    <div class="icon-btn" id="bottomRsvpBtn" aria-label="rsvp" data-open="rsvp"><i class="fa-regular fa-envelope"></i><span>RSVP</span></div>
     
     <div id="popupRsvp" class="map-popup" role="dialog" aria-label="rsvp" style="display:none;position:absolute;bottom:70px;left:50%;transform:translateX(-50%);background:#e8dcc6;color:#222;padding:12px;border-radius:12px;width:260px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.12);">
         <h4 style="margin:0 0 6px;font-family:'Playfair Display',serif;color:#1f1f1f">RSVP</h4>
         <p style="margin:0 0 10px;font-size:14px;color:#6b5f50">Pilih tindakan untuk RSVP atau hantarkan ucapan.</p>
-        <a id="openExternalRsvp" href="https://forms.gle/RSVP_Form_Link" target="_blank" style="display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;text-decoration:none;padding:8px;border-radius:8px;margin:6px auto;max-width:200px;gap:8px"><i class="fa-solid fa-clipboard-list"></i><span>Isi RSVP</span></a>
+        <a id="openExternalRsvp" href="#" style="display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;text-decoration:none;padding:8px;border-radius:8px;margin:6px auto;max-width:200px;gap:8px"><i class="fa-solid fa-clipboard-list"></i><span>Isi RSVP</span></a>
         <a id="openUcapan" href="#" style="display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;text-decoration:none;padding:8px;border-radius:8px;margin:6px auto;max-width:200px;gap:8px"><i class="fa-solid fa-pencil"></i><span>Hantar Ucapan</span></a>
       </div>
-    
-  
-  
+
+      <!-- RSVP iFrame popup (hidden by default) -->
+      <div id="popupRsvpIframe" class="map-popup" style="display:none;position:absolute;bottom:70px;left:50%;transform:translateX(-50%);background:#e8dcc6;color:#222;padding:12px;border-radius:12px;width:95%;max-width:420px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.12);z-index:1000;">
+        <h4 style="margin:0 0 6px;font-family:'Playfair Display',serif;color:#1f1f1f">Isi RSVP</h4>
+        <p style="margin:0 0 10px;font-size:14px;color:#6b5f50">Sila lengkapkan borang di bawah.</p>
+        <iframe id="rsvpIframe" src="https://docs.google.com/forms/d/e/1FAIpQLScUL6RqKCr7s_hT7UAIb5hMI06GA9LUBpyeimcrSuvwgWlf0w/viewform?embedded=true" width="100%" height="100%" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
+      </div>
+
 
 
 <!-- ucapan form -->
@@ -288,7 +295,7 @@ var popupRsvp = document.getElementById('popupRsvp');
 var ucapanForm = document.getElementById('ucapanForm');
 
 
-function hideAll(){ if(contactCard) contactCard.style.display='none'; if(mapPopup) mapPopup.style.display='none'; if(popupRsvp) popupRsvp.style.display='none'; if(ucapanForm) ucapanForm.style.display='none'; }
+function hideAll(){ if(contactCard) contactCard.style.display='none'; if(mapPopup) mapPopup.style.display='none'; if(popupRsvp) popupRsvp.style.display='none'; if(ucapanForm) ucapanForm.style.display='none'; var iframePopup = document.getElementById('popupRsvpIframe'); if(iframePopup) iframePopup.style.display = 'none'; }
 
 
 if(callBtn){ callBtn.addEventListener('click', function(e){ e.stopPropagation(); hideAll(); if(contactCard) contactCard.style.display = (contactCard.style.display==='block')? 'none':'block'; }); }
@@ -298,7 +305,7 @@ if(bottomRsvpBtn){ bottomRsvpBtn.addEventListener('click', function(e){ e.preven
 
 var openExternal = document.getElementById('openExternalRsvp');
 var openUcapan = document.getElementById('openUcapan');
-if(openExternal) openExternal.addEventListener('click', function(){ window.open('https://forms.gle/RSVP_Form_Link','_blank'); });
+if(openExternal) openExternal.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); var iframePopup = document.getElementById('popupRsvpIframe'); if(iframePopup) iframePopup.style.display = (iframePopup.style.display === 'block') ? 'none' : 'block'; });
 if(openUcapan) openUcapan.addEventListener('click', function(){ if(popupRsvp) popupRsvp.style.display='none'; if(ucapanForm) ucapanForm.style.display='block'; document.getElementById('ucap_name').focus(); });
 
 
@@ -306,7 +313,7 @@ var submitBtn = document.getElementById('submitUcapan');
 if(submitBtn){ submitBtn.addEventListener('click', function(){ var name = document.getElementById('ucap_name').value.trim(); var text = document.getElementById('ucap_text').value.trim(); if(!name||!text){ alert('Sila isi nama dan ucapan.'); return; } var container = document.getElementById('bubblesContainer'); var bubble = document.createElement('div'); bubble.className='bubble'; bubble.innerHTML = '<div class="meta">'+escapeHtml(name)+'</div><div class="msg">'+escapeHtml(text)+'</div>'; if(container) container.insertBefore(bubble, container.firstChild); document.getElementById('ucap_name').value=''; document.getElementById('ucap_text').value=''; if(ucapanForm) ucapanForm.style.display='none'; }); }
 
 
-document.addEventListener('click', function(e){ var popupEls = [contactCard, mapPopup, popupRsvp, ucapanForm]; var btns = [callBtn, mapBtn, bottomRsvpBtn]; var clicked=false; popupEls.forEach(function(p){ if(p && p.contains && p.contains(e.target)) clicked=true; }); btns.forEach(function(b){ if(b && (b===e.target || b.contains(e.target))) clicked=true; }); if(!clicked) hideAll(); });
+document.addEventListener('click', function(e){ var iframePopup = document.getElementById('popupRsvpIframe'); var popupEls = [contactCard, mapPopup, popupRsvp, ucapanForm, iframePopup]; var btns = [callBtn, mapBtn, bottomRsvpBtn]; var clicked=false; popupEls.forEach(function(p){ if(p && p.contains && p.contains(e.target)) clicked=true; }); btns.forEach(function(b){ if(b && (b===e.target || b.contains(e.target))) clicked=true; }); if(!clicked) hideAll(); });
 
 
 function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\'/g,'&#039;'); }
