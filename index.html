@@ -214,13 +214,156 @@
         <a id="openUcapan" href="#" style="display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;text-decoration:none;padding:8px;border-radius:8px;margin:6px auto;max-width:200px;gap:8px"><i class="fa-solid fa-pencil"></i><span>Hantar Ucapan</span></a>
       </div>
 
-      <!-- RSVP iFrame popup (hidden by default) -->
-      <div id="popupRsvpIframe" class="map-popup" style="display:none;position:absolute;bottom:70px;left:50%;transform:translateX(-50%);background:#e8dcc6;color:#222;padding:12px;border-radius:12px;width:95%;max-width:420px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.12);z-index:1000;">
-        <h4 style="margin:0 0 6px;font-family:'Playfair Display',serif;color:#1f1f1f">Isi RSVP</h4>
-        <p style="margin:0 0 10px;font-size:14px;color:#6b5f50">Sila lengkapkan borang di bawah.</p>
-        <button id="closeRsvpIframe" aria-label="Tutup" style="position:absolute;top:10px;right:12px;background:transparent;border:none;font-size:20px;color:#333;cursor:pointer;z-index:1001">&times;</button>
-        <iframe id="rsvpIframe" src="https://docs.google.com/forms/d/e/1FAIpQLScUL6RqKCr7s_hT7UAIb5hMI06GA9LUBpyeimcrSuvwgWlf0w/viewform?embedded=true" width="100%" height="100%" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
-      </div>
+      <!-- Gantikan bahagian popupRsvpIframe dengan ini -->
+<div id="popupRsvpIframe" class="map-popup" style="display:none;position:absolute;bottom:70px;left:50%;transform:translateX(-50%);background:#e8dcc6;color:#222;padding:12px;border-radius:12px;width:95%;max-width:420px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.12);z-index:1000;">
+  <h4 style="margin:0 0 6px;font-family:'Playfair Display',serif;color:#1f1f1f">Isi RSVP</h4>
+  <p style="margin:0 0 10px;font-size:14px;color:#6b5f50">Sila lengkapkan borang di bawah.</p>
+  <button id="closeRsvpIframe" aria-label="Tutup" style="position:absolute;top:10px;right:12px;background:transparent;border:none;font-size:20px;color:#333;cursor:pointer;z-index:1001">&times;</button>
+
+  <!-- FORM -->
+  <form id="rsvpInlineForm" style="display:flex;flex-direction:column;gap:8px;margin-top:6px;">
+    <input id="rsvp_nama" name="nama" type="text" placeholder="Nama penuh" required style="padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px" />
+    <input id="rsvp_jumlah" name="jumlah" type="number" min="1" placeholder="Bilangan ahli (cth: 2)" value="1" required style="padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px" />
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:4px">
+      <label style="display:flex;align-items:center;gap:6px"><input type="radio" name="hadir" value="Hadir" checked /> Hadir</label>
+      <label style="display:flex;align-items:center;gap:6px"><input type="radio" name="hadir" value="Tidak Hadir" /> Tidak Hadir</label>
+    </div>
+
+    <button id="rsvpSubmit" type="submit" class="btn" style="margin-top:6px">Hantar RSVP</button>
+    <button id="rsvpSubmitAlt" type="button" class="btn ghost" style="display:none">Hantar (Form POST)</button>
+  </form>
+
+  <div id="rsvpStatus" style="margin-top:8px;font-size:13px;color:#333;display:none"></div>
+</div>
+
+<script>
+(function(){
+  // Ganti dengan Web App URL deploy anda jika berbeza
+  const WS_URL = 'https://script.google.com/macros/s/AKfycbzIHYp70QawSLYH8K1M1YMgIOE52UjUbB9UrgtUQWsiLhEGpbm60ma70sd3mAL3BdherQ/exec';
+
+  const form = document.getElementById('rsvpInlineForm');
+  const statusEl = document.getElementById('rsvpStatus');
+  const popup = document.getElementById('popupRsvpIframe');
+  const closeBtn = document.getElementById('closeRsvpIframe');
+
+  function showStatus(msg, ok){
+    statusEl.style.display='block';
+    statusEl.textContent = msg;
+    statusEl.style.color = ok ? '#0a7a00' : '#b21b1b';
+  }
+
+  // Close handler
+  if (closeBtn){
+    closeBtn.addEventListener('click', function(e){
+      e.stopPropagation();
+      popup.style.display = 'none';
+    });
+  }
+
+  // Submit handler: try JSON first, fallback to urlencoded
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    statusEl.style.display='none';
+
+    const nama = document.getElementById('rsvp_nama').value.trim();
+    const jumlah = document.getElementById('rsvp_jumlah').value;
+    const hadir = (form.querySelector('input[name="hadir"]:checked')||{}).value || '';
+
+    if (!nama || !jumlah) {
+      showStatus('Sila lengkapkan nama dan jumlah ahli.', false);
+      return;
+    }
+
+    const payload = { nama: nama, jumlah: jumlah, hadir: hadir };
+
+    // First attempt: send JSON (Apps Script doPost in your server handles application/json)
+    try {
+      const res = await fetch(WS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const j = await safeJson(res);
+      if (res.ok && j && j.status === 'success') {
+        onSuccess(payload, j);
+        return;
+      } else {
+        // show debug message but continue to fallback
+        console.warn('JSON submit responded:', j);
+      }
+    } catch (err) {
+      console.warn('JSON submit failed:', err);
+    }
+
+    // Fallback: urlencoded form submission via fetch
+    try {
+      const body = new URLSearchParams();
+      body.append('nama', nama);
+      body.append('jumlah', jumlah);
+      body.append('hadir', hadir);
+
+      const res2 = await fetch(WS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      });
+      const j2 = await safeJson(res2);
+      if (res2.ok && j2 && j2.status === 'success') {
+        onSuccess(payload, j2);
+        return;
+      } else {
+        showStatus('Gagal hantar RSVP (server responded). Sila cuba lagi.', false);
+        console.error('urlencoded response', j2);
+      }
+    } catch (err2) {
+      console.error('Fallback submit failed', err2);
+      showStatus('Ralat rangkaian. Sila cuba semula.', false);
+    }
+  });
+
+  // parse json safely
+  async function safeJson(resp){
+    try {
+      return await resp.json();
+    } catch(e){
+      return null;
+    }
+  }
+
+  function onSuccess(payload, serverResp){
+    showStatus(serverResp && serverResp.message ? serverResp.message : 'RSVP dihantar. Terima kasih!', true);
+
+    // add a small preview bubble to 'Ucapan' area as visual confirmation
+    // reuse the same bubblesContainer used for ucapan
+    try {
+      var container = document.getElementById('bubblesContainer');
+      if (container){
+        var bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        var meta = document.createElement('div'); meta.className='meta';
+        meta.textContent = payload.nama + ' — RSVP';
+        var msg = document.createElement('div'); msg.className='msg';
+        msg.textContent = (payload.hadir || 'Hadir') + ' • ' + payload.jumlah + ' orang';
+        bubble.appendChild(meta); bubble.appendChild(msg);
+        container.insertBefore(bubble, container.firstChild);
+      }
+    } catch(err){ console.warn('preview bubble err',err); }
+
+    // reset form
+    form.reset();
+    // close after short delay
+    setTimeout(function(){ popup.style.display='none'; }, 900);
+  }
+
+  // allow external code to open the popup and focus the first input
+  window.openRsvpPopup = function(){
+    popup.style.display = 'block';
+    setTimeout(function(){ document.getElementById('rsvp_nama').focus(); }, 80);
+  };
+
+})();
+</script>
+
 
 
 
@@ -234,118 +377,101 @@
 </div>
 
   <script>
-// Main script: countdown, modals, popups, ucapan storage
+    function pad(n){return String(n).padStart(2,'0');}
+    const eventDate = new Date('2026-01-01T11:00:00+08:00');
+    function updateCountdown(){
+      const now = new Date();
+      let diff = Math.max(0, Math.floor((eventDate - now) / 1000));
+      const days = Math.floor(diff / 86400); diff %= 86400;
+      const hours = Math.floor(diff / 3600); diff %= 3600;
+      const mins = Math.floor(diff / 60); const secs = diff % 60;
+      const daysEl = document.getElementById('days');
+      const hoursEl = document.getElementById('hours');
+      const minsEl = document.getElementById('mins');
+      const secsEl = document.getElementById('secs');
+      if(daysEl) daysEl.textContent = days;
+      if(hoursEl) hoursEl.textContent = pad(hours);
+      if(minsEl) minsEl.textContent = pad(mins);
+      if(secsEl) secsEl.textContent = pad(secs);
+    }
+    updateCountdown(); setInterval(updateCountdown, 1000);
+
+    const openBtn = document.getElementById('openRsvp');
+    const bottomRsvpBtn = document.getElementById('bottomRsvpBtn');
+    const form = document.getElementById('rsvpForm');
+
+    function toggleRsvp(){
+      if(!form) return;
+      form.classList.toggle('active');
+      const isActive = form.classList.contains('active');
+      if(isActive){
+        const mainCard = document.getElementById('mainCard');
+        if(mainCard) mainCard.scrollIntoView({behavior:'smooth', block:'center'});
+      }
+    }
+    if(openBtn) openBtn.addEventListener('click', toggleRsvp);
+    if(bottomRsvpBtn) bottomRsvpBtn.addEventListener('click', toggleRsvp);
+
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImg');
+    const closeBtn = document.getElementsByClassName('close')[0];
+    const images = document.querySelectorAll('.grid img');
+
+    if(images){
+      images.forEach(img => {
+        img.addEventListener('click', () => {
+          if(modal && modalImg){ modal.style.display = 'block'; modalImg.src = img.src; }
+        });
+      });
+    }
+
+    if(closeBtn) closeBtn.onclick = function() { if(modal) modal.style.display = 'none'; }
+    window.addEventListener('click', function(event) { if (modal && event.target == modal) modal.style.display = 'none'; });
+
+    // Call & Map popup logic
+    (function(){
+var callBtn = document.getElementById('callBtn');
+var mapBtn = document.getElementById('mapBtn');
+var bottomRsvpBtn = document.getElementById('bottomRsvpBtn');
+var contactCard = document.getElementById('contactCard');
+var mapPopup = document.getElementById('mapPopup');
+var popupRsvp = document.getElementById('popupRsvp');
+var ucapanForm = document.getElementById('ucapanForm');
+
+
+function hideAll(){ if(contactCard) contactCard.style.display='none'; if(mapPopup) mapPopup.style.display='none'; if(popupRsvp) popupRsvp.style.display='none'; if(ucapanForm) ucapanForm.style.display='none'; var iframePopup = document.getElementById('popupRsvpIframe'); if(iframePopup) iframePopup.style.display = 'none'; }
+
+
+if(callBtn){ callBtn.addEventListener('click', function(e){ e.stopPropagation(); hideAll(); if(contactCard) contactCard.style.display = (contactCard.style.display==='block')? 'none':'block'; }); }
+if(mapBtn){ mapBtn.addEventListener('click', function(e){ e.stopPropagation(); hideAll(); if(mapPopup) mapPopup.style.display = (mapPopup.style.display==='block')? 'none':'block'; }); }
+if(bottomRsvpBtn){ bottomRsvpBtn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); hideAll(); if(popupRsvp) popupRsvp.style.display = (popupRsvp.style.display==='block')? 'none':'block'; }); }
+
+
+var openExternal = document.getElementById('openExternalRsvp');
+var openUcapan = document.getElementById('openUcapan');
+if(openExternal) openExternal.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); var iframePopup = document.getElementById('popupRsvpIframe'); if(iframePopup) iframePopup.style.display = (iframePopup.style.display === 'block') ? 'none' : 'block'; });
+if(openUcapan) openUcapan.addEventListener('click', function(){ if(popupRsvp) popupRsvp.style.display='none'; if(ucapanForm) ucapanForm.style.display='block'; document.getElementById('ucap_name').focus(); });
+
+
+var submitBtn = document.getElementById('submitUcapan');
+if(submitBtn){ submitBtn.addEventListener('click', function(){ var name = document.getElementById('ucap_name').value.trim(); var text = document.getElementById('ucap_text').value.trim(); if(!name||!text){ alert('Sila isi nama dan ucapan.'); return; } var container = document.getElementById('bubblesContainer'); var bubble = document.createElement('div'); bubble.className='bubble'; bubble.innerHTML = '<div class="meta">'+escapeHtml(name)+'</div><div class="msg">'+escapeHtml(text)+'</div>'; if(container) container.insertBefore(bubble, container.firstChild); document.getElementById('ucap_name').value=''; document.getElementById('ucap_text').value=''; if(ucapanForm) ucapanForm.style.display='none'; }); }
+
+
+document.addEventListener('click', function(e){ var iframePopup = document.getElementById('popupRsvpIframe'); var popupEls = [contactCard, mapPopup, popupRsvp, ucapanForm, iframePopup]; var btns = [callBtn, mapBtn, bottomRsvpBtn]; var clicked=false; popupEls.forEach(function(p){ if(p && p.contains && p.contains(e.target)) clicked=true; }); btns.forEach(function(b){ if(b && (b===e.target || b.contains(e.target))) clicked=true; }); if(!clicked) hideAll(); });
+
+
+function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\'/g,'&#039;'); }
+})();
+
+// attach close button handler for RSVP iframe popup
 (function(){
-  function pad(n){return String(n).padStart(2,'0');}
-  const eventDate = new Date('2026-01-01T11:00:00+08:00');
-  function updateCountdown(){
-    const now = new Date();
-    let diff = Math.max(0, Math.floor((eventDate - now) / 1000));
-    const days = Math.floor(diff / 86400); diff %= 86400;
-    const hours = Math.floor(diff / 3600); diff %= 3600;
-    const mins = Math.floor(diff / 60); const secs = diff % 60;
-    const daysEl = document.getElementById('days');
-    const hoursEl = document.getElementById('hours');
-    const minsEl = document.getElementById('mins');
-    const secsEl = document.getElementById('secs');
-    if(daysEl) daysEl.textContent = days;
-    if(hoursEl) hoursEl.textContent = pad(hours);
-    if(minsEl) minsEl.textContent = pad(mins);
-    if(secsEl) secsEl.textContent = pad(secs);
-  }
-  updateCountdown(); setInterval(updateCountdown, 1000);
-
-  // Image modal
-  const modal = document.getElementById('imageModal');
-  const modalImg = document.getElementById('modalImg');
-  const closeBtn = document.getElementsByClassName('close')[0];
-  const images = document.querySelectorAll('.grid img');
-  if(images){ images.forEach(img => { img.addEventListener('click', () => { if(modal && modalImg){ modal.style.display = 'block'; modalImg.src = img.src; } }); }); }
-  if(closeBtn) closeBtn.onclick = function() { if(modal) modal.style.display = 'none'; }
-  window.addEventListener('click', function(event) { if (modal && event.target == modal) modal.style.display = 'none'; });
-
-  // Popup helpers
-  var callBtn = document.getElementById('callBtn');
-  var mapBtn = document.getElementById('mapBtn');
-  var bottomRsvpBtn = document.getElementById('bottomRsvpBtn');
-  var contactCard = document.getElementById('contactCard');
-  var mapPopup = document.getElementById('mapPopup');
-  var popupRsvp = document.getElementById('popupRsvp');
-  var ucapanForm = document.getElementById('ucapanForm');
-
-  function hideAll(){
-    if(contactCard) contactCard.style.display='none';
-    if(mapPopup) mapPopup.style.display='none';
-    if(popupRsvp) popupRsvp.style.display='none';
-    if(ucapanForm) ucapanForm.style.display='none';
-    var iframePopup = document.getElementById('popupRsvpIframe'); if(iframePopup) iframePopup.style.display = 'none';
-  }
-
-  if(callBtn){ callBtn.addEventListener('click', function(e){ e.stopPropagation(); hideAll(); if(contactCard) contactCard.style.display = (contactCard.style.display==='block')? 'none':'block'; }); }
-  if(mapBtn){ mapBtn.addEventListener('click', function(e){ e.stopPropagation(); hideAll(); if(mapPopup) mapPopup.style.display = (mapPopup.style.display==='block')? 'none':'block'; }); }
-  if(bottomRsvpBtn){ bottomRsvpBtn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); hideAll(); if(popupRsvp) popupRsvp.style.display = (popupRsvp.style.display==='block')? 'none':'block'; }); }
-
-  var openExternal = document.getElementById('openExternalRsvp');
-  var openUcapan = document.getElementById('openUcapan');
-  if(openExternal) openExternal.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); var iframePopup = document.getElementById('popupRsvpIframe'); if(iframePopup) iframePopup.style.display = (iframePopup.style.display === 'block') ? 'none' : 'block'; });
-  if(openUcapan) openUcapan.addEventListener('click', function(){ if(popupRsvp) popupRsvp.style.display='none'; if(ucapanForm) ucapanForm.style.display='block'; var nameField = document.getElementById('ucap_name'); if(nameField) nameField.focus(); });
-
-  // Escape helper
-  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\'/g,'&#039;'); }
-
-  // --- Ucapan storage: localStorage key and helpers ---
-  var STORAGE_KEY = 'ucapan_bubbles_v1';
-  function loadUcapanFromStorage(){
-    try{
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if(!raw) return [];
-      var arr = JSON.parse(raw);
-      if(!Array.isArray(arr)) return [];
-      return arr;
-    }catch(e){ console.error('loadUcapan error', e); return []; }
-  }
-  function saveUcapanArray(arr){
-    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }catch(e){ console.error('saveUcapan error', e); }
-  }
-  function addUcapanToStorage(name,text){
-    var arr = loadUcapanFromStorage();
-    arr.push({name:name, text:text, ts:Date.now()});
-    saveUcapanArray(arr);
-  }
-
-  function renderUcapanBubble(item){
-    var container = document.getElementById('bubblesContainer');
-    if(!container) return;
-    var bubble = document.createElement('div'); bubble.className='bubble';
-    var meta = document.createElement('div'); meta.className='meta'; meta.textContent = item.name;
-    var msg = document.createElement('div'); msg.className='msg'; msg.textContent = item.text;
-    bubble.appendChild(meta); bubble.appendChild(msg);
-    container.insertBefore(bubble, container.firstChild);
-  }
-
-  // On load, render stored ucapan
-  (function(){
-    var stored = loadUcapanFromStorage();
-    stored.forEach(function(item){ if(item && item.name && item.text) renderUcapanBubble(item); });
-  })();
-
-  // Submit handler for ucapan
-  var submitBtn = document.getElementById('submitUcapan');
-  if(submitBtn){ submitBtn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); var nameEl = document.getElementById('ucap_name'); var textEl = document.getElementById('ucap_text'); if(!nameEl || !textEl) return; var name = nameEl.value.trim(); var text = textEl.value.trim(); if(!name||!text){ alert('Sila isi nama dan ucapan.'); return; } // render
-    var item = {name:escapeHtml(name), text:escapeHtml(text)}; renderUcapanBubble(item); // persist
-    try{ addUcapanToStorage(name, text); }catch(e){console.error(e);} // reset
-    nameEl.value=''; textEl.value=''; if(ucapanForm) ucapanForm.style.display='none'; }); }
-
-  // Click-outside to close (including iframe popup)
-  document.addEventListener('click', function(e){ var iframePopup = document.getElementById('popupRsvpIframe'); var popupEls = [contactCard, mapPopup, popupRsvp, ucapanForm, iframePopup]; var btns = [callBtn, mapBtn, bottomRsvpBtn]; var clicked=false; popupEls.forEach(function(p){ if(p && p.contains && p.contains(e.target)) clicked=true; }); btns.forEach(function(b){ if(b && (b===e.target || b.contains(e.target))) clicked=true; }); if(!clicked) hideAll(); });
-
-  // attach close button handler for RSVP iframe popup
-  (function(){
-    var closeBtn = document.getElementById('closeRsvpIframe');
-    if(!closeBtn) return;
-    closeBtn.addEventListener('click', function(e){ e.stopPropagation(); var iframePopup = document.getElementById('popupRsvpIframe'); if(iframePopup) iframePopup.style.display = 'none'; });
-  })();
-
+  var closeBtn = document.getElementById('closeRsvpIframe');
+  if(!closeBtn) return;
+  closeBtn.addEventListener('click', function(e){
+    e.stopPropagation();
+    var iframePopup = document.getElementById('popupRsvpIframe');
+    if(iframePopup) iframePopup.style.display = 'none';
+  });
 })();
 </script>
 </body>
