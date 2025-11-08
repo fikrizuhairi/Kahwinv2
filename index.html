@@ -120,40 +120,13 @@
           <img src="https://i.postimg.cc/T1VPHTMh/8EC8700E-DA47-4FF0-9F84-2FCE47B1A986-1-105-c.jpg" alt="3">
         </div>
 
-        <div style="display:flex;justify-content:center;margin-top:16px;width:100%">
-          <button id="openRsvp" class="btn" style="max-width:300px;width:100%"><i class="fa-solid fa-clipboard-list"></i> RSVP</button>
-        </div>
-
-        <form class="rsvp" id="rsvpForm">
-          <input type="text" id="name" name="name" placeholder="Nama" required />
-          <div class="row">
-            <div class="col"><input type="number" id="guests" name="guests" placeholder="Bil. Ahli (termasuk anda)" min="1" value="1" required /></div>
-            <div class="col">
-              <select id="attend" name="attend" required>
-                <option value="">Hadir atau Tidak</option>
-                <option value="Hadir">Hadir</option>
-                <option value="Tidak Hadir">Tidak Hadir</option>
-              </select>
-            </div>
-          </div>
-          <textarea id="note" name="note" placeholder="Nota (pilihan)" rows="2" style="padding:10px;border-radius:8px;border:1px solid #ddd"></textarea>
-          <div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
-            <button type="submit" class="btn" style="max-width:300px;width:100%"><i class="fa-solid fa-paper-plane"></i> Hantar</button>
-          </div>
-          <div id="rsvpMsg" class="note" aria-live="polite"></div>
-        </form>
-
+        
         <div id="imageModal" class="modal">
           <span class="close">&times;</span>
           <img class="modal-content" id="modalImg" />
         </div>
 
-        <h2>Lokasi</h2>
-        <p>White House Event Space, Dungun</p>
-        <div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
-          <a id="mapsLink" href="https://maps.app.goo.gl/Z2F3c86dVen1ciR29" class="btn" style="flex:1;max-width:200px"><i class="fa-solid fa-map-location-dot"></i> Google Maps</a>
-          <a href="https://ul.waze.com/ul?venue_id=67764271.677839321.39155974&overview=yes&utm_campaign=default&utm_source=waze_website&utm_medium=lm_share_location" class="btn ghost" style="flex:1;max-width:200px"><i class="fa-brands fa-waze"></i> Waze</a>
-        </div>
+        
 
         <h2>COUNTING DAYS</h2>
         <div class="countdown" id="countdown">
