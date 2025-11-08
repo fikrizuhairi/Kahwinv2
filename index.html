@@ -57,18 +57,28 @@
 
     footer{font-size:12px;color:var(--muted);margin-top:20px;text-align:center}
 
-    .bottom-bar{
-      position:fixed;left:50%;transform:translateX(-50%);bottom:10px;z-index:50;
+    .bottom-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;z-index:50;
       width:calc(100% - 60px);max-width:400px;background:rgba(0,0,0,0.7);
       border-radius:12px;padding:8px 8px;box-shadow:0 6px 14px rgba(0,0,0,0.08);
-      display:flex;gap:12px;align-items:center;justify-content:space-around;overflow:hidden
+      display:flex;gap:12px;align-items:center;justify-content:space-around;overflow:visible
     }
 
-    .bottom-bar .icon-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;background:transparent;color:#fff;font-size:20px;text-decoration:none;gap:4px}
-
+    .bottom-bar .icon-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;background:transparent;color:#fff;font-size:20px;text-decoration:none;gap:4px;cursor:pointer}
     .bottom-bar .icon-btn i{color:#fff;font-size:20px}
     .bottom-bar .icon-btn span{font-size:11px;color:#fff;line-height:1}
 
+    /* contact card (big) that appears above content */
+    .contact-card{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:110px;z-index:80;width:calc(100% - 40px);max-width:420px;background:#e8dcc6;border-radius:18px;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,0.12)}
+    .contact-card h3{text-align:center;margin-bottom:8px;font-family:'Playfair Display',serif;font-size:20px;color:#1f1f1f}
+    .contact-list{margin-top:8px}
+    .contact-row{display:flex;align-items:center;justify-content:space-between;padding:12px 6px;border-radius:10px}
+    .contact-info{display:flex;flex-direction:column}
+    .contact-info .name{font-size:16px;font-weight:600;color:#111}
+    .contact-info .role{font-size:13px;font-style:italic;color:#6b5f50}
+    .contact-actions{display:flex;gap:12px;align-items:center}
+    .contact-actions a{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:transparent;border:1px solid rgba(0,0,0,0.08);text-decoration:none;color:#111}
+
+    @media (max-width:420px){.contact-card{width:calc(100% - 28px);padding:16px}}
   </style>
 </head>
 <body>
@@ -158,9 +168,56 @@
     </section>
   </div>
 
+  <!-- contact card (shown when Call icon clicked) -->
+  <div class="contact-card" id="contactCard" role="dialog" aria-label="contact">
+    <h3>CONTACT</h3>
+    <div class="contact-list">
+      <div class="contact-row">
+        <div class="contact-info">
+          <div class="name">Hj. Shuhaimi</div>
+          <div class="role">Bapa</div>
+        </div>
+        <div class="contact-actions">
+          <a href="https://wa.me/60123456789" target="_blank" aria-label="whatsapp"><i class="fa-brands fa-whatsapp"></i></a>
+          <a href="tel:+60123456789" aria-label="call"><i class="fa-solid fa-phone"></i></a>
+        </div>
+      </div>
+
+      <div class="contact-row">
+        <div class="contact-info">
+          <div class="name">Syafiq</div>
+          <div class="role">Abang</div>
+        </div>
+        <div class="contact-actions">
+          <a href="https://wa.me/60123456788" target="_blank" aria-label="whatsapp"><i class="fa-brands fa-whatsapp"></i></a>
+          <a href="tel:+60123456788" aria-label="call"><i class="fa-solid fa-phone"></i></a>
+        </div>
+      </div>
+
+      <div class="contact-row">
+        <div class="contact-info">
+          <div class="name">Amalina</div>
+          <div class="role">Kakak</div>
+        </div>
+        <div class="contact-actions">
+          <a href="https://wa.me/60123456787" target="_blank" aria-label="whatsapp"><i class="fa-brands fa-whatsapp"></i></a>
+          <a href="tel:+60123456787" aria-label="call"><i class="fa-solid fa-phone"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="bottom-bar" role="navigation" aria-label="tindakan">
-    <a class="icon-btn" href="tel:+6012XXXXXXX" aria-label="panggil"><i class="fa-solid fa-phone"></i><span>Call</span></a>
-    <a class="icon-btn" href="https://maps.app.goo.gl/Z2F3c86dVen1ciR29" target="_blank" rel="noopener" aria-label="lokasi"><i class="fa-solid fa-location-dot"></i><span>Lokasi</span></a>
+    <div class="icon-btn" id="callBtn" aria-label="panggil"><i class="fa-solid fa-phone"></i><span>Call</span></div>
+    <div class="icon-btn" id="mapBtn" aria-label="lokasi">
+      <i class="fa-solid fa-location-dot"></i><span>Lokasi</span>
+      <div class="map-popup" id="mapPopup" style="display:none;position:absolute;bottom:70px;left:50%;transform:translateX(-50%);background:#e8dcc6;color:#222;padding:12px;border-radius:12px;width:260px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.12);">
+        <h4 style="margin:0 0 6px;font-family:'Playfair Display',serif;color:#1f1f1f">Lokasi</h4>
+        <p style="margin:0 0 10px;font-size:14px;color:#6b5f50">White House Event Space, Dungun</p>
+        <a href="https://maps.app.goo.gl/Z2F3c86dVen1ciR29" target="_blank" style="display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;text-decoration:none;padding:8px;border-radius:8px;margin:6px auto;max-width:200px;gap:8px"><i class="fa-solid fa-map-location-dot"></i><span>Google Maps</span></a>
+        <a href="https://ul.waze.com/ul?venue_id=67764271.677839321.39155974" target="_blank" style="display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;text-decoration:none;padding:8px;border-radius:8px;margin:6px auto;max-width:200px;gap:8px"><i class="fa-brands fa-waze"></i><span>Waze</span></a>
+      </div>
+    </div>
     <a class="icon-btn" href="#" id="bottomRsvpBtn" aria-label="rsvp"><i class="fa-regular fa-envelope"></i><span>RSVP</span></a>
   </div>
 
@@ -173,10 +230,14 @@
       const days = Math.floor(diff / 86400); diff %= 86400;
       const hours = Math.floor(diff / 3600); diff %= 3600;
       const mins = Math.floor(diff / 60); const secs = diff % 60;
-      document.getElementById('days').textContent = days;
-      document.getElementById('hours').textContent = pad(hours);
-      document.getElementById('mins').textContent = pad(mins);
-      document.getElementById('secs').textContent = pad(secs);
+      const daysEl = document.getElementById('days');
+      const hoursEl = document.getElementById('hours');
+      const minsEl = document.getElementById('mins');
+      const secsEl = document.getElementById('secs');
+      if(daysEl) daysEl.textContent = days;
+      if(hoursEl) hoursEl.textContent = pad(hours);
+      if(minsEl) minsEl.textContent = pad(mins);
+      if(secsEl) secsEl.textContent = pad(secs);
     }
     updateCountdown(); setInterval(updateCountdown, 1000);
 
@@ -185,29 +246,68 @@
     const form = document.getElementById('rsvpForm');
 
     function toggleRsvp(){
+      if(!form) return;
       form.classList.toggle('active');
       const isActive = form.classList.contains('active');
       if(isActive){
-        document.getElementById('mainCard').scrollIntoView({behavior:'smooth', block:'center'});
+        const mainCard = document.getElementById('mainCard');
+        if(mainCard) mainCard.scrollIntoView({behavior:'smooth', block:'center'});
       }
     }
-    openBtn.addEventListener('click', toggleRsvp);
-    bottomRsvpBtn.addEventListener('click', toggleRsvp);
+    if(openBtn) openBtn.addEventListener('click', toggleRsvp);
+    if(bottomRsvpBtn) bottomRsvpBtn.addEventListener('click', toggleRsvp);
 
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImg');
     const closeBtn = document.getElementsByClassName('close')[0];
     const images = document.querySelectorAll('.grid img');
 
-    images.forEach(img => {
-      img.addEventListener('click', () => {
-        modal.style.display = 'block';
-        modalImg.src = img.src;
+    if(images){
+      images.forEach(img => {
+        img.addEventListener('click', () => {
+          if(modal && modalImg){ modal.style.display = 'block'; modalImg.src = img.src; }
+        });
       });
-    });
+    }
 
-    closeBtn.onclick = function() { modal.style.display = 'none'; }
-    window.onclick = function(event) { if (event.target == modal) modal.style.display = 'none'; }
+    if(closeBtn) closeBtn.onclick = function() { if(modal) modal.style.display = 'none'; }
+    window.addEventListener('click', function(event) { if (modal && event.target == modal) modal.style.display = 'none'; });
+
+    // Call & Map popup logic
+    const callBtn = document.getElementById('callBtn');
+    const contactCard = document.getElementById('contactCard');
+    const mapBtn = document.getElementById('mapBtn');
+    const mapPopup = document.getElementById('mapPopup');
+
+    if(callBtn && contactCard){
+      callBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        const isVisible = contactCard.style.display === 'block';
+        contactCard.style.display = isVisible ? 'none' : 'block';
+        // ensure map popup is closed
+        if(mapPopup) mapPopup.style.display = 'none';
+      });
+    }
+
+    if(mapBtn && mapPopup){
+      mapBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        const isVisible = mapPopup.style.display === 'block';
+        mapPopup.style.display = isVisible ? 'none' : 'block';
+        // ensure contact card is closed
+        if(contactCard) contactCard.style.display = 'none';
+      });
+    }
+
+    // close both when clicking outside
+    document.addEventListener('click', function(e){
+      if(contactCard && !contactCard.contains(e.target) && e.target !== callBtn){
+        contactCard.style.display = 'none';
+      }
+      if(mapPopup && !mapPopup.contains(e.target) && e.target !== mapBtn && !mapBtn.contains(e.target)){
+        mapPopup.style.display = 'none';
+      }
+    });
   </script>
 </body>
 </html>
