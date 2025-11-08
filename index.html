@@ -11,7 +11,7 @@
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Poppins',sans-serif;background:linear-gradient(180deg,#f8f6f4 0%,#ffffff 100%);color:#111;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 
-    .app{max-width:420px;margin:auto;overflow:hidden;position:relative;min-height:100vh;scroll-snap-type:y mandatory;overflow-y:scroll;-webkit-overflow-scrolling:touch}
+    .app{max-width:420px;margin:auto;overflow:hidden;position:relative;min-height:100vh;scroll-snap-type:y mandatory;overflow-y:scroll;-webkit-overflow-scrolling:touch;padding-bottom:100px}
 
     section{scroll-snap-align:start;min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative}
 
@@ -56,6 +56,19 @@
     .countdown .lbl{font-size:11px;color:var(--muted)}
 
     footer{font-size:12px;color:var(--muted);margin-top:20px;text-align:center}
+
+    .bottom-bar{
+      position:fixed;left:50%;transform:translateX(-50%);bottom:10px;z-index:50;
+      width:calc(100% - 60px);max-width:400px;background:rgba(0,0,0,0.7);
+      border-radius:12px;padding:8px 8px;box-shadow:0 6px 14px rgba(0,0,0,0.08);
+      display:flex;gap:12px;align-items:center;justify-content:space-around;overflow:hidden
+    }
+
+    .bottom-bar .icon-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;background:transparent;color:#fff;font-size:20px;text-decoration:none;gap:4px}
+
+    .bottom-bar .icon-btn i{color:#fff;font-size:20px}
+    .bottom-bar .icon-btn span{font-size:11px;color:#fff;line-height:1}
+
   </style>
 </head>
 <body>
@@ -74,7 +87,7 @@
     </section>
 
     <section>
-      <div class="content">
+      <div class="content" id="mainCard">
         <p>Assalamualaikum &amp; Salam Sejahtera</p>
         <div class="parent-name"><strong>HJ. MOHD SHUHAIMI BIN DAUD</strong></div>
         <div class="parent-name"><strong>&amp;</strong></div>
@@ -97,7 +110,6 @@
           <img src="https://i.postimg.cc/T1VPHTMh/8EC8700E-DA47-4FF0-9F84-2FCE47B1A986-1-105-c.jpg" alt="3">
         </div>
 
-        <!-- RSVP Button and Form -->
         <div style="display:flex;justify-content:center;margin-top:16px;width:100%">
           <button id="openRsvp" class="btn" style="max-width:300px;width:100%"><i class="fa-solid fa-clipboard-list"></i> RSVP</button>
         </div>
@@ -121,7 +133,6 @@
           <div id="rsvpMsg" class="note" aria-live="polite"></div>
         </form>
 
-        <!-- Modal for enlarged image -->
         <div id="imageModal" class="modal">
           <span class="close">&times;</span>
           <img class="modal-content" id="modalImg" />
@@ -130,7 +141,7 @@
         <h2>Lokasi</h2>
         <p>White House Event Space, Dungun</p>
         <div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
-          <a href="https://maps.app.goo.gl/Z2F3c86dVen1ciR29" class="btn" style="flex:1;max-width:200px"><i class="fa-solid fa-map-location-dot"></i> Google Maps</a>
+          <a id="mapsLink" href="https://maps.app.goo.gl/Z2F3c86dVen1ciR29" class="btn" style="flex:1;max-width:200px"><i class="fa-solid fa-map-location-dot"></i> Google Maps</a>
           <a href="https://ul.waze.com/ul?venue_id=67764271.677839321.39155974&overview=yes&utm_campaign=default&utm_source=waze_website&utm_medium=lm_share_location" class="btn ghost" style="flex:1;max-width:200px"><i class="fa-brands fa-waze"></i> Waze</a>
         </div>
 
@@ -146,8 +157,14 @@
       </div>
     </section>
   </div>
+
+  <div class="bottom-bar" role="navigation" aria-label="tindakan">
+    <a class="icon-btn" href="tel:+6012XXXXXXX" aria-label="panggil"><i class="fa-solid fa-phone"></i><span>Call</span></a>
+    <a class="icon-btn" href="https://maps.app.goo.gl/Z2F3c86dVen1ciR29" target="_blank" rel="noopener" aria-label="lokasi"><i class="fa-solid fa-location-dot"></i><span>Lokasi</span></a>
+    <a class="icon-btn" href="#" id="bottomRsvpBtn" aria-label="rsvp"><i class="fa-regular fa-envelope"></i><span>RSVP</span></a>
+  </div>
+
   <script>
-    // Countdown to event (01 Jan 2026 11:00 MYT)
     function pad(n){return String(n).padStart(2,'0');}
     const eventDate = new Date('2026-01-01T11:00:00+08:00');
     function updateCountdown(){
@@ -163,17 +180,20 @@
     }
     updateCountdown(); setInterval(updateCountdown, 1000);
 
-    // Keep Reservation button behavior (toggle RSVP form)
     const openBtn = document.getElementById('openRsvp');
+    const bottomRsvpBtn = document.getElementById('bottomRsvpBtn');
     const form = document.getElementById('rsvpForm');
-    openBtn.addEventListener('click', ()=>{
-      form.classList.toggle('active');
-      if(form.classList.contains('active')){
-        form.scrollIntoView({behavior:'smooth', block:'center'});
-      }
-    });
 
-    // Image Modal
+    function toggleRsvp(){
+      form.classList.toggle('active');
+      const isActive = form.classList.contains('active');
+      if(isActive){
+        document.getElementById('mainCard').scrollIntoView({behavior:'smooth', block:'center'});
+      }
+    }
+    openBtn.addEventListener('click', toggleRsvp);
+    bottomRsvpBtn.addEventListener('click', toggleRsvp);
+
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImg');
     const closeBtn = document.getElementsByClassName('close')[0];
