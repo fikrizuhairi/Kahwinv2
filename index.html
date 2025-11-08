@@ -26,7 +26,7 @@
 
     .content{background:rgba(255,255,255,0.8);backdrop-filter:blur(6px);border-radius:16px;padding:24px;box-shadow:0 8px 20px rgba(0,0,0,0.05);position:relative;z-index:3;margin:20px;max-width:420px}
 
-    .parent-name,.couple-name{font-family:'Playfair Display',serif;font-size:18px;color:#2b2b2b;margin-bottom:8px;text-align:center}
+    .parent-name,.couple-name{font-family:'Playfair Display',serif;font-size:18px;color:#2b2b2b;margin-bottom:8px;text-align:center;font-weight:700}
 
     h2{font-size:18px;font-weight:600;color:var(--accent);margin:16px 0 8px;text-align:center}
     p{font-size:15px;color:#222;line-height:1.6;margin-bottom:8px;text-align:center}
@@ -66,8 +66,8 @@
       </div>
 
       <div class="intro-text">
-        <div class="kecil">WALIMATULURUS</div><br><br>
-        <div class="besar"><span>ISMA</span><span>&amp;</span><span>FIKRI</span></div><br>
+        <div class="kecil">WALIMATULURUS</div>
+        <div class="besar"><span>ISMA</span><span>&amp;</span><span>FIKRI</span></div>
         <div class="tarikh">03 JANUARI 2026 | SABTU</div>
         <div class="lokasi">WHITE HOUSE EVENT SPACE, DUNGUN</div>
       </div>
@@ -76,13 +76,13 @@
     <section>
       <div class="content">
         <p>Assalamualaikum &amp; Salam Sejahtera</p>
-        <div class="parent-name">HJ. MOHD SHUHAIMI BIN DAUD</div>
-        <div class="parent-name">&amp;</div>
-        <div class="parent-name">HJH. NOR AZILA BINTI RAMLI</div>
-        <p>Dengan penuh kesyukuran kami menjemput,<br>Dato’ | Datin | Tuan | Puan | Encik | Cik<br>ke majlis perkahwinan puteri kami</p><br>
-        <div class="couple-name">SITI ISMAHANI IZZATI BINTI MOHD SHUHAIMI</div>
-        <div class="parent-name">&amp;</div>
-        <div class="couple-name">MUHAMMAD FIKRI BIN ZUHAIRI</div>
+        <div class="parent-name"><strong>HJ. MOHD SHUHAIMI BIN DAUD</strong></div>
+        <div class="parent-name"><strong>&amp;</strong></div>
+        <div class="parent-name"><strong>HJH. NOR AZILA BINTI RAMLI</strong></div>
+        <p>Dengan penuh kesyukuran kami menjemput,<br>Dato’ | Datin | Tuan | Puan | Encik | Cik<br>ke majlis perkahwinan puteri kami</p>
+        <div class="couple-name"><strong>SITI ISMAHANI IZZATI BINTI MOHD SHUHAIMI</strong></div>
+        <div class="parent-name"><strong>&amp;</strong></div>
+        <div class="couple-name"><strong>MUHAMMAD FIKRI BIN ZUHAIRI</strong></div>
 
         <h2>Butiran Majlis</h2>
         <p><strong>Tarikh:</strong> Sabtu, 03 Januari 2026<br><strong>Masa:</strong> 11:00 pagi - 4:00 petang<br><strong>Tempat:</strong> White House Event Space Dungun</p>
@@ -146,11 +146,10 @@
       </div>
     </section>
   </div>
-
   <script>
-    // Countdown to event (03 Jan 2026 11:00 MYT)
+    // Countdown to event (01 Jan 2026 11:00 MYT)
     function pad(n){return String(n).padStart(2,'0');}
-    const eventDate = new Date('2026-01-03T11:00:00+08:00');
+    const eventDate = new Date('2026-01-01T11:00:00+08:00');
     function updateCountdown(){
       const now = new Date();
       let diff = Math.max(0, Math.floor((eventDate - now) / 1000));
@@ -164,32 +163,14 @@
     }
     updateCountdown(); setInterval(updateCountdown, 1000);
 
-    // RSVP toggle
+    // Keep Reservation button behavior (toggle RSVP form)
     const openBtn = document.getElementById('openRsvp');
     const form = document.getElementById('rsvpForm');
-
     openBtn.addEventListener('click', ()=>{
       form.classList.toggle('active');
       if(form.classList.contains('active')){
         form.scrollIntoView({behavior:'smooth', block:'center'});
       }
-    });
-
-    // Submit RSVP to Google Sheet
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwV7R1W5UntrVYVhB8eX8QfV3eCG0G2Lk5mRvb9evw3BzWyD_tnN3XWld5b4znqYwLYzg/exec';
-
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const data = new FormData(form);
-      fetch(scriptURL, { method: 'POST', body: data })
-        .then(response => {
-          document.getElementById('rsvpMsg').textContent = 'Terima kasih! RSVP anda telah diterima.';
-          form.reset();
-        })
-        .catch(error => {
-          document.getElementById('rsvpMsg').textContent = 'Ralat menghantar RSVP. Sila cuba lagi.';
-          console.error('Error!', error.message);
-        });
     });
 
     // Image Modal
@@ -205,15 +186,8 @@
       });
     });
 
-    closeBtn.onclick = function() {
-      modal.style.display = 'none';
-    }
-
-    window.onclick = function(event) {
-      if (event.target == modal) {
-        modal.style.display = 'none';
-      }
-    }
+    closeBtn.onclick = function() { modal.style.display = 'none'; }
+    window.onclick = function(event) { if (event.target == modal) modal.style.display = 'none'; }
   </script>
 </body>
 </html>
