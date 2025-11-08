@@ -141,8 +141,13 @@
 
         <h2>Ucapan</h2>
 
-        <!-- control row: keep controls but prevent them from becoming bubbles -->
-                <div class="bubbles" id="bubblesContainer"></div>
+        <!-- control row: add remove last 5 button -->
+        <div class="controls" aria-hidden="false">
+          <button id="remove5Btn" class="danger" title="Buang 5 ucapan terbaru">Buang 5 Ucapan Terbaru</button>
+          <button id="clearAllBtn" title="Buang semua ucapan">Buang Semua</button>
+        </div>
+
+        <div class="bubbles" id="bubblesContainer"></div>
 
         <h2>COUNTING DAYS</h2>
         <div class="countdown" id="countdown">
@@ -217,7 +222,29 @@
         <a id="openUcapan" href="#" style="display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;text-decoration:none;padding:8px;border-radius:8px;margin:6px auto;max-width:200px;gap:8px"><i class="fa-solid fa-pencil"></i><span>Hantar Ucapan</span></a>
       </div>
 
-      <script>
+      <!-- Gantikan bahagian popupRsvpIframe dengan ini -->
+<div id="popupRsvpIframe" class="map-popup" style="display:none;position:absolute;bottom:70px;left:50%;transform:translateX(-50%);background:#e8dcc6;color:#222;padding:12px;border-radius:12px;width:95%;max-width:420px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.12);z-index:1000;">
+  <h4 style="margin:0 0 6px;font-family:'Playfair Display',serif;color:#1f1f1f">Isi RSVP</h4>
+  <p style="margin:0 0 10px;font-size:14px;color:#6b5f50">Sila lengkapkan borang di bawah.</p>
+  <button id="closeRsvpIframe" aria-label="Tutup" style="position:absolute;top:10px;right:12px;background:transparent;border:none;font-size:20px;color:#333;cursor:pointer;z-index:1001">&times;</button>
+
+  <!-- FORM -->
+  <form id="rsvpInlineForm" style="display:flex;flex-direction:column;gap:8px;margin-top:6px;">
+    <input id="rsvp_nama" name="nama" type="text" placeholder="Nama penuh" required style="padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px" />
+    <input id="rsvp_jumlah" name="jumlah" type="number" min="1" placeholder="Bilangan ahli (cth: 2)" value="1" required style="padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px" />
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:4px">
+      <label style="display:flex;align-items:center;gap:6px"><input type="radio" name="hadir" value="Hadir" checked /> Hadir</label>
+      <label style="display:flex;align-items:center;gap:6px"><input type="radio" name="hadir" value="Tidak Hadir" /> Tidak Hadir</label>
+    </div>
+
+    <button id="rsvpSubmit" type="submit" class="btn" style="margin-top:6px">Hantar RSVP</button>
+    <button id="rsvpSubmitAlt" type="button" class="btn ghost" style="display:none">Hantar (Form POST)</button>
+  </form>
+
+  <div id="rsvpStatus" style="margin-top:8px;font-size:13px;color:#333;display:none"></div>
+</div>
+
+<script>
 (function(){
   // Ganti dengan Web App URL deploy anda jika berbeza
   const WS_URL = 'https://script.google.com/macros/s/AKfycbzIHYp70QawSLYH8K1M1YMgIOE52UjUbB9UrgtUQWsiLhEGpbm60ma70sd3mAL3BdherQ/exec';
@@ -436,27 +463,15 @@
       if(submitBtn){
         submitBtn.addEventListener('click', function(e){
           e.preventDefault();
-          var nameEl = document.getElementById('ucap_name');
-          var textEl = document.getElementById('ucap_text');
-          var name = nameEl ? nameEl.value.trim() : '';
-          var text = textEl ? textEl.value.trim() : '';
+          var name = document.getElementById('ucap_name').value.trim();
+          var text = document.getElementById('ucap_text').value.trim();
           if(!name||!text){ alert('Sila isi nama dan ucapan.'); return; }
-
-          // Prevent accidental control-label bubbles from being added
-          var forbidden = ['Buang 5 Ucapan Terbaru', 'Buang Semua'];
-          if (forbidden.indexOf(name) !== -1 || forbidden.indexOf(text) !== -1) {
-            if(nameEl) nameEl.value = '';
-            if(textEl) textEl.value = '';
-            alert('Ucapan mengandungi teks yang tidak dibenarkan. Sila cuba lagi.');
-            return;
-          }
-
           var container = document.getElementById('bubblesContainer');
           var bubble = document.createElement('div'); bubble.className='bubble';
           bubble.innerHTML = '<div class="meta">'+escapeHtml(name)+'</div><div class="msg">'+escapeHtml(text)+'</div>';
           if(container) container.insertBefore(bubble, container.firstChild);
-          if(nameEl) nameEl.value='';
-          if(textEl) textEl.value='';
+          document.getElementById('ucap_name').value='';
+          document.getElementById('ucap_text').value='';
           if(ucapanForm) ucapanForm.style.display='none';
         });
       }
@@ -500,23 +515,6 @@
         btns.forEach(function(b){ if(b && (b===e.target || b.contains(e.target))) clicked=true; });
         if(!clicked) hideAll();
       });
-
-      // remove any existing bubbles that mistakenly contain control labels
-      function sanitizeBubbles(){
-        var container = document.getElementById('bubblesContainer');
-        if(!container) return;
-        var forbidden = ['Buang 5 Ucapan Terbaru', 'Buang Semua'];
-        for(var i=container.children.length-1;i>=0;i--){
-          var child = container.children[i];
-          var text = (child && child.textContent) ? child.textContent.trim() : '';
-          if(forbidden.some(function(f){ return text.indexOf(f) !== -1;})){
-            container.removeChild(child);
-          }
-        }
-      }
-
-      // run once on load to clean up any accidental control bubbles
-      sanitizeBubbles();
 
       function escapeHtml(s){
         if (typeof s !== 'string') return s;
