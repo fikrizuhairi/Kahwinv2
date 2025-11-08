@@ -142,10 +142,7 @@
         <h2>Ucapan</h2>
 
         <!-- control row: add remove last 5 button -->
-        <div class="controls" aria-hidden="false">
-          <button id="remove5Btn" class="danger" title="Buang 5 ucapan terbaru">Buang 5 Ucapan Terbaru</button>
-          <button id="clearAllBtn" title="Buang semua ucapan">Buang Semua</button>
-        </div>
+        <!-- REMOVED: control row HTML (Buang 5 Ucapan Terbaru / Buang Semua) -->
 
         <div class="bubbles" id="bubblesContainer"></div>
 
@@ -349,7 +346,7 @@
     // reset form
     if (form) form.reset();
     // close after short delay
-    setTimeout(function(){ if(popup) popup.style.display='none'; }, 900);
+    setTimeout(function(){ if(popup) popup.style.display = 'none'; }, 900);
   }
 
   // allow external code to open the popup and focus the first input
@@ -473,36 +470,6 @@
           document.getElementById('ucap_name').value='';
           document.getElementById('ucap_text').value='';
           if(ucapanForm) ucapanForm.style.display='none';
-        });
-      }
-
-      // New: remove last 5 ucapan and clear all handlers
-      var remove5Btn = document.getElementById('remove5Btn');
-      var clearAllBtn = document.getElementById('clearAllBtn');
-
-      if(remove5Btn){
-        remove5Btn.addEventListener('click', function(){
-          var container = document.getElementById('bubblesContainer');
-          if(!container) return;
-          var items = container.children.length;
-          if(items === 0){ alert('Tiada ucapan untuk dibuang.'); return; }
-          var toRemove = Math.min(5, items);
-          if(!confirm('Anda pasti mahu buang '+toRemove+' ucapan terbaru?')) return;
-          for(var i=0;i<toRemove;i++){
-            if(container.firstChild) container.removeChild(container.firstChild);
-          }
-          alert(toRemove+' ucapan terbaru telah dibuang.');
-        });
-      }
-
-      if(clearAllBtn){
-        clearAllBtn.addEventListener('click', function(){
-          var container = document.getElementById('bubblesContainer');
-          if(!container) return;
-          if(container.children.length === 0){ alert('Tiada ucapan untuk dibuang.'); return; }
-          if(!confirm('Anda pasti mahu buang semua ucapan? Tindakan ini tidak boleh undur.')) return;
-          container.innerHTML = '';
-          alert('Semua ucapan telah dibuang.');
         });
       }
 
