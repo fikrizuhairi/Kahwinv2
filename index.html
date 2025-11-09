@@ -273,7 +273,7 @@
   }
 
   function hideAllPopups(){
-    const ids = ['contactCard','mapPopup','popupRsvp','popupRsvpIframe','ucapanForm'];
+    const ids = ['contactCard','mapPopup','popupRsvp','popupRsvpIframe','ucapanForm','imageModal'];
     ids.forEach(id => { const e = document.getElementById(id); if(e) e.style.display = 'none'; });
   }
 
@@ -373,27 +373,7 @@
 
       const payload = { type: 'rsvp', nama: nama, jumlah: jumlah, hadir: hadir, timestamp: new Date().toISOString() };
 
-      // try JSON first
-      try{
-        const res = await fetch(RSVP_WS_URL, {
-          method:'POST',
-          headers:{ 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const j = await safeJson(res);
-        if(res.ok && j && (j.status === 'success' || j.result === 'success')) {
-          showStatus(rsvpStatus, (j.message || 'RSVP dihantar. Terima kasih!'), true);
-          rsvpForm.reset();
-          setTimeout(()=> { popupRsvpIframe.style.display='none'; }, 900);
-          return;
-        } else {
-          console.warn('RSVP JSON response', j);
-        }
-      } catch(err){
-        console.warn('RSVP JSON submit failed', err);
-      }
-
-      // fallback urlencoded
+      // try urlencoded (Apps Script friendly)
       try {
         const body = new URLSearchParams();
         body.append('nama', nama);
@@ -423,42 +403,103 @@
     });
   }
 
-  /* ---------- Ucapan (messages) ---------- */
+  /* ---------- Ucapan (messages) - robust load + optimistic UI ---------- */
   const openUcapanButton = document.getElementById('openUcapanBtn');
   const closeUcapanBtn = document.getElementById('closeUcapanBtn');
   const submitUcapan = document.getElementById('submitUcapan');
   const ucapanStatus = document.getElementById('ucapanStatus');
   const bubblesContainer = document.getElementById('bubblesContainer');
 
-  // load saved local ucapan (unsent)
-  function tryResendLocalUcapan(){
+  // fallback helpers if not present
+  if (typeof escapeHtml === 'undefined') {
+    function escapeHtml(s){ if (typeof s !== 'string') return s||''; return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+  }
+  if (typeof safeJson === 'undefined') {
+    async function safeJson(resp){ try{ return await resp.json(); }catch(e){ return null; } }
+  }
+  if (typeof showStatus === 'undefined') {
+    function showStatus(el,msg,ok){ if(!el) return; el.style.display='block'; el.textContent=msg; el.style.color = ok ? '#0a7a00' : '#b21b1b'; }
+  }
+
+  function addBubbleToUI(name, text, timestamp, prepend=true){
     try {
-      const pending = JSON.parse(localStorage.getItem('ucapan_pending_v1')||'[]');
-      if(!pending || !pending.length) return;
-      // try send each and remove on success
-      pending.forEach(async (item, idx) => {
-        try {
-          const res = await fetch(UCAPAN_WS_URL, {
-            method:'POST',
-            headers:{ 'Content-Type':'application/json' },
-            body: JSON.stringify(item)
-          });
-          const j = await safeJson(res);
-          if(res.ok && j && (j.status === 'success' || j.result === 'success')){
-            // remove from local storage
-            const cur = JSON.parse(localStorage.getItem('ucapan_pending_v1')||'[]');
-            cur.splice(idx,1);
-            localStorage.setItem('ucapan_pending_v1', JSON.stringify(cur));
-          }
-        } catch(e){
-          // ignore
+      const container = bubblesContainer;
+      const bubble = document.createElement('div'); bubble.className = 'bubble';
+      const timeLabel = timestamp ? (new Date(timestamp)).toLocaleString() : (new Date()).toLocaleString();
+      bubble.innerHTML = '<div class="meta">'+escapeHtml(name)+' • <span style="font-size:11px;color:#999">'+ timeLabel +'</span></div><div class="msg">'+escapeHtml(text)+'</div>';
+      if(prepend && container) container.insertBefore(bubble, container.firstChild);
+      else if(container) container.appendChild(bubble);
+    } catch(e){ console.warn('addBubbleToUI error', e); }
+  }
+
+  // Robust parser: try JSON, try text->JSON, tolerant to different shapes
+  async function parseServerJsonResponse(resp){
+    try {
+      const j = await safeJson(resp);
+      if(j) return j;
+    } catch(e){ /* ignore */ }
+
+    try {
+      const txt = await resp.text();
+      try { return JSON.parse(txt); } catch(e){}
+      const m = txt.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+      if(m && m[1]) {
+        try { return JSON.parse(m[1]); } catch(e){}
+      }
+    } catch(e){}
+    return null;
+  }
+
+  // load list from server, tolerant to multiple response shapes
+  async function loadUcapanFromServer(){
+    try {
+      console.log('loadUcapanFromServer: GET', UCAPAN_WS_URL);
+      const resp = await fetch(UCAPAN_WS_URL, { method:'GET', cache:'no-cache' });
+      if(!resp) { console.warn('no response from GET'); return false; }
+      const j = await parseServerJsonResponse(resp);
+      console.log('loadUcapanFromServer parsed:', j);
+
+      if(!j) {
+        console.warn('loadUcapanFromServer: could not parse JSON');
+        return false;
+      }
+
+      let items = null;
+      if(Array.isArray(j)) items = j;
+      else if(j.items && Array.isArray(j.items)) items = j.items;
+      else if(j.data && Array.isArray(j.data)) items = j.data;
+      else {
+        const maybe = Object.values(j).filter(v => Array.isArray(v))[0];
+        if(maybe) items = maybe;
+      }
+
+      if(!items) {
+        console.warn('loadUcapanFromServer: no items array found in JSON');
+        return false;
+      }
+
+      bubblesContainer.innerHTML = '';
+      items.forEach(it => {
+        if(Array.isArray(it)){
+          addBubbleToUI(it[1] || '', it[2] || '', it[0] || null, false);
+        } else if(typeof it === 'object' && it !== null){
+          const nama = it.nama || it.Nama || it.NAMA || it[1] || '';
+          const ucapan = it.ucapan || it.Ucapan || it.UCAPAN || it[2] || it.message || '';
+          const ts = it.timestamp || it.time || it.Timestamp || it[0] || null;
+          addBubbleToUI(nama, ucapan, ts, false);
         }
       });
-    } catch(e){}
+      return true;
+    } catch(err){
+      console.warn('loadUcapanFromServer error', err);
+      return false;
+    }
   }
-  // attempt resend on load
-  tryResendLocalUcapan();
 
+  // init: try load existing ucapan
+  (async function(){ await loadUcapanFromServer(); })();
+
+  // popup open/close handlers
   if(openUcapanButton){
     openUcapanButton.addEventListener('click', function(e){
       e.preventDefault(); e.stopPropagation();
@@ -471,20 +512,10 @@
     closeUcapanBtn.addEventListener('click', function(e){ e.stopPropagation(); ucapanForm.style.display='none'; });
   }
 
-  function addBubbleToUI(name, text, prepend=true){
-    try {
-      const container = bubblesContainer;
-      const bubble = document.createElement('div'); bubble.className = 'bubble';
-      bubble.innerHTML = '<div class="meta">'+escapeHtml(name)+' • <span style="font-size:11px;color:#999">'+ (new Date()).toLocaleString() +'</span></div><div class="msg">'+escapeHtml(text)+'</div>';
-      if(prepend && container) container.insertBefore(bubble, container.firstChild);
-      else if(container) container.appendChild(bubble);
-    } catch(e){}
-  }
-
+  // submit: optimistic bubble + POST + refresh (robust)
   if(submitUcapan){
     submitUcapan.addEventListener('click', async function(e){
-      e.preventDefault();
-      e.stopPropagation();
+      e.preventDefault(); e.stopPropagation();
       if(ucapanStatus) ucapanStatus.style.display='none';
       const nameEl = document.getElementById('ucap_name');
       const textEl = document.getElementById('ucap_text');
@@ -493,79 +524,77 @@
 
       if(!name || !text){ showStatus(ucapanStatus, 'Sila isi nama dan ucapan.', false); return; }
 
-      // immediately show bubble in UI
-      addBubbleToUI(name, text, true);
+      // disable button to prevent double send
+      submitUcapan.style.pointerEvents = 'none';
+      submitUcapan.style.opacity = '0.6';
 
-      // prepare payload
-      const payload = { type:'ucapan', nama: name, ucapan: text, timestamp: new Date().toISOString() };
+      // optimistic bubble
+      const tsNow = new Date().toISOString();
+      addBubbleToUI(name, text, tsNow, true);
 
-      // try send to server (JSON)
+      const payload = { nama: name, ucapan: text, timestamp: tsNow, type: 'ucapan' };
       let sent = false;
+
+      // try form-urlencoded POST
       try {
-        const res = await fetch(UCAPAN_WS_URL, {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify(payload)
+        const body = new URLSearchParams();
+        body.append('nama', payload.nama);
+        body.append('ucapan', payload.ucapan);
+        body.append('timestamp', payload.timestamp);
+        body.append('type', 'ucapan');
+        console.log('POST form to', UCAPAN_WS_URL, body.toString());
+
+        const resp = await fetch(UCAPAN_WS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' },
+          body: body.toString()
         });
-        const j = await safeJson(res);
-        if(res.ok && j && (j.status === 'success' || j.result === 'success')){
-          showStatus(ucapanStatus, (j.message || 'Ucapan dihantar. Terima kasih!'), true);
+        const parsed = await parseServerJsonResponse(resp.clone ? resp.clone() : resp);
+        console.log('POST form response parsed:', parsed);
+        if(resp.ok && parsed && (parsed.status==='success' || parsed.result==='success')) {
           sent = true;
-        } else {
-          console.warn('ucapan json resp', j);
         }
-      } catch(err){
-        console.warn('ucapan submit error', err);
-      }
+      } catch(err){ console.warn('POST form error', err); }
 
-      // fallback: try urlencoded
+      // fallback JSON POST
       if(!sent){
         try {
-          const body = new URLSearchParams();
-          body.append('nama', name);
-          body.append('ucapan', text);
-          body.append('type','ucapan');
-
-          const res2 = await fetch(UCAPAN_WS_URL, {
-            method:'POST',
-            headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
-            body: body.toString()
+          console.log('POST JSON fallback to', UCAPAN_WS_URL, payload);
+          const resp2 = await fetch(UCAPAN_WS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type':'application/json;charset=UTF-8' },
+            body: JSON.stringify(payload)
           });
-          const j2 = await safeJson(res2);
-          if(res2.ok && j2 && (j2.status === 'success' || j2.result === 'success')){
-            showStatus(ucapanStatus, (j2.message || 'Ucapan dihantar. Terima kasih!'), true);
-            sent = true;
-          } else {
-            console.warn('ucapan fallback resp', j2);
-          }
-        } catch(err2){
-          console.warn('ucapan fallback error', err2);
-        }
+          const parsed2 = await parseServerJsonResponse(resp2.clone ? resp2.clone() : resp2);
+          console.log('POST json response parsed:', parsed2);
+          if(resp2.ok && parsed2 && (parsed2.status==='success' || parsed2.result==='success')) sent = true;
+        } catch(err2){ console.warn('POST json error', err2); }
       }
 
-      // if still not sent, save locally so admin can sync later
-      if(!sent){
-        try {
-          const cur = JSON.parse(localStorage.getItem('ucapan_pending_v1')||'[]');
-          cur.push(payload);
-          localStorage.setItem('ucapan_pending_v1', JSON.stringify(cur));
-          showStatus(ucapanStatus, 'Ucapan ditambah (disimpan sementara). Akan cuba hantar kemudian.', true);
-        } catch(e){
-          showStatus(ucapanStatus, 'Ucapan ditambah tetapi tidak dapat disimpan tempatan. Sila ambil tangkapan skrin.', false);
-        }
+      // Try refresh list; if fails we keep optimistic bubble visible
+      const refreshed = await loadUcapanFromServer();
+      if(!refreshed){
+        console.warn('Could not refresh list after POST. Optimistic bubble remains.');
       }
 
-      // reset & close small popup after short delay
+      // reset UI
       if(nameEl) nameEl.value='';
       if(textEl) textEl.value='';
-      setTimeout(()=>{ ucapanForm.style.display='none'; }, 900);
+      submitUcapan.style.pointerEvents = 'auto';
+      submitUcapan.style.opacity = '1';
+      setTimeout(()=>{ ucapanForm.style.display='none'; }, 700);
+
+      if(sent){
+        showStatus(ucapanStatus, 'Ucapan dihantar dan disimpan.', true);
+      } else {
+        showStatus(ucapanStatus, 'Ucapan dipaparkan di skrin tetapi tidak dapat disahkan oleh server.', false);
+      }
     });
   }
 
   /* ---------- countdown ---------- */
   function pad(n){ return String(n).padStart(2,'0'); }
-  // eventDate set to 03 Jan 2026 11:00 +08:00 to match details
-  const eventDate = new Date('2026-01-03T11:00:00+08:00');
+  const eventDate = new Date(2026, 0, 3, 11, 0, 0); // 03 Jan 2026 11:00 local time
   function updateCountdown(){
     const now = new Date();
     let diff = Math.max(0, Math.floor((eventDate - now) / 1000));
