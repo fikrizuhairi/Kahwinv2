@@ -253,11 +253,11 @@
 (function(){
   /* ---------- CONFIG: ganti URL jika perlu ---------- */
   const RSVP_WS_URL = 'https://script.google.com/macros/s/AKfycbzIHYp70QawSLYH8K1M1YMgIOE52UjUbB9UrgtUQWsiLhEGpbm60ma70sd3mAL3BdherQ/exec';
-  const UCAPAN_WS_URL = 'https://script.google.com/macros/s/AKfycbwh0lF9ruZ1yCwo2maglft9VDywaBTDrPhY503mV5m4YHoOc84vqayykmTqZli8l8wG/exec';
+  const UCAPAN_WS_URL = 'https://script.google.com/macros/s/AKfycbyrSqg_u6ujXLgpyCwtheHU-4oX26Qud57gQkh9PQM/dev';
 
   /* ---------- UTIL ---------- */
   function escapeHtml(s){
-    if (typeof s !== 'string') return s;
+    if (typeof s !== 'string') return s || '';
     return s.replace(/&/g,'&amp;')
             .replace(/</g,'&lt;')
             .replace(/>/g,'&gt;')
@@ -273,11 +273,12 @@
   }
 
   function hideAllPopups(){
-    const els = ['contactCard','mapPopup','popupRsvp','popupRsvpIframe','ucapanForm'];
-    els.forEach(id => {
-      const e = document.getElementById(id);
-      if(e) e.style.display = 'none';
-    });
+    const ids = ['contactCard','mapPopup','popupRsvp','popupRsvpIframe','ucapanForm'];
+    ids.forEach(id => { const e = document.getElementById(id); if(e) e.style.display = 'none'; });
+  }
+
+  async function safeJson(resp){
+    try { return await resp.json(); } catch(e){ return null; }
   }
 
   /* ---------- IMAGE MODAL ---------- */
@@ -332,7 +333,6 @@
 
   /* close popups when clicking outside */
   document.addEventListener('click', function(e){
-    // if click inside a popup or buttons, do nothing
     const popupEls = [contactCard, mapPopup, popupRsvp, popupRsvpIframe, ucapanForm, imageModal];
     let inside=false;
     popupEls.forEach(p=>{ if(p && p.contains(e.target)) inside=true; });
@@ -423,13 +423,9 @@
     });
   }
 
-  async function safeJson(resp){
-    try { return await resp.json(); } catch(e){ return null; }
-  }
-
   /* ---------- Ucapan (messages) ---------- */
   const openUcapanButton = document.getElementById('openUcapanBtn');
-  const openUcapanClose = document.getElementById('closeUcapanBtn');
+  const closeUcapanBtn = document.getElementById('closeUcapanBtn');
   const submitUcapan = document.getElementById('submitUcapan');
   const ucapanStatus = document.getElementById('ucapanStatus');
   const bubblesContainer = document.getElementById('bubblesContainer');
@@ -471,8 +467,8 @@
       const el = document.getElementById('ucap_name'); if(el) el.focus();
     });
   }
-  if(openUcapanClose){
-    openUcapanClose.addEventListener('click', function(e){ e.stopPropagation(); ucapanForm.style.display='none'; });
+  if(closeUcapanBtn){
+    closeUcapanBtn.addEventListener('click', function(e){ e.stopPropagation(); ucapanForm.style.display='none'; });
   }
 
   function addBubbleToUI(name, text, prepend=true){
@@ -553,7 +549,7 @@
           const cur = JSON.parse(localStorage.getItem('ucapan_pending_v1')||'[]');
           cur.push(payload);
           localStorage.setItem('ucapan_pending_v1', JSON.stringify(cur));
-          
+          showStatus(ucapanStatus, 'Ucapan ditambah (disimpan sementara). Akan cuba hantar kemudian.', true);
         } catch(e){
           showStatus(ucapanStatus, 'Ucapan ditambah tetapi tidak dapat disimpan tempatan. Sila ambil tangkapan skrin.', false);
         }
@@ -568,8 +564,8 @@
 
   /* ---------- countdown ---------- */
   function pad(n){ return String(n).padStart(2,'0'); }
-  // NOTE: eventDate currently set to 2026-01-01 11:00 +08:00 - ubah ikut tarikh sebenar jika mahu
-  const eventDate = new Date('2026-01-01T11:00:00+08:00');
+  // eventDate set to 03 Jan 2026 11:00 +08:00 to match details
+  const eventDate = new Date('2026-01-03T11:00:00+08:00');
   function updateCountdown(){
     const now = new Date();
     let diff = Math.max(0, Math.floor((eventDate - now) / 1000));
